@@ -5,6 +5,8 @@ metadata:
   name: shipping
   labels:
     name: shipping
+  annotations:
+    litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
   replicas: 1

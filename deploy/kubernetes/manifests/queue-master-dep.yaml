@@ -5,6 +5,8 @@ metadata:
   name: queue-master
   labels:
     name: queue-master
+  annotations:
+    litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
   replicas: 1

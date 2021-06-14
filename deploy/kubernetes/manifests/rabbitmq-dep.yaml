@@ -5,6 +5,8 @@ metadata:
   name: rabbitmq
   labels:
     name: rabbitmq
+  annotations:
+    litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
   replicas: 1
