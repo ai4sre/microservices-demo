@@ -28,6 +28,9 @@ spec: {
 		}, {
 			name:  "TOTAL_CHAOS_DURATION"
 			value: "60"
+		}, {
+			name: "CHAOS_INTERVAL"
+			value: "180"
 		}]
 	},]
 }
