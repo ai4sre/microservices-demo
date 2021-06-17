@@ -1,0 +1,78 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: argowf-chaos-
+spec:
+  entrypoint: argowf-chaos-pod-cpu-hog
+  serviceAccountName: argo-chaos
+  arguments:
+    parameters:
+      - name: appNamespace
+        value: "sock-shop"
+      - name: adminModeNamespace
+        value: "litmus"
+      - name: chaosServiceAccount
+        value: "sock-shop-chaos-engine"
+  parallelism: 1
+  templates:
+    - name: argowf-chaos-pod-cpu-hog
+      steps:
+      -   - name: run-chaos-pod-cpu-hog
+            template: run-chaos-pod-cpu-hog
+            arguments:
+              parameters:
+              - name: appLabel
+                value: "{{item}}"
+            withItems:
+            - user
+            - user-db
+            - shipping
+            - carts
+            - carts-db
+            - orders
+            - orders-db
+            - catalogue
+            - catalogue-db
+            - payment
+            - front-end
+
+    - name: run-chaos-pod-cpu-hog
+      inputs:
+        parameters:
+        - name: appLabel
+        artifacts:
+        - name: run-chaos-pod-cpu-hog
+          path: /tmp/chaosengine.yaml
+          raw:
+            data: |
+              apiVersion: litmuschaos.io/v1alpha1
+              kind: ChaosEngine
+              metadata:
+                name: {{inputs.parameters.appLabel}}-chaos
+                namespace: {{workflow.parameters.appNamespace}}
+              spec:
+                annotationCheck: "false"
+                engineState: active
+                monitoring: true
+                appinfo:
+                  appns: {{workflow.parameters.appNamespace}}
+                  applabel: name={{inputs.parameters.appLabel}}
+                  appkind: deployment
+                chaosServiceAccount: {{workflow.parameters.chaosServiceAccount}}
+                jobCleanUpPolicy: delete
+                experiments:
+                - name: pod-cpu-hog
+                  spec:
+                    components:
+                      env:
+                      - name: TARGET_CONTAINER
+                        value: "{{inputs.parameters.appLabel}}”
+                      - name: CPU_CORES
+                        value: "2"
+                      - name: TOTAL_CHAOS_DURATION
+                        value: "60"
+
+      container:
+        image: lachlanevenson/k8s-kubectl
+        command: [sh, -c]
+        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}} | echo "sleeping for 120s" | sleep 120 ']
