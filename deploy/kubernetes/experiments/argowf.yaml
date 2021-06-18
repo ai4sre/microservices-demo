@@ -13,32 +13,46 @@ spec:
         value: "litmus"
       - name: chaosServiceAccount
         value: "sock-shop-chaos-engine"
+      - name: appLabels
+        value: |
+          ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
+      - name: repeatNum
+        value: 3
   parallelism: 1
   templates:
     - name: argowf-chaos-pod-cpu-hog
       steps:
       -   - name: run-chaos-pod-cpu-hog
-            template: run-chaos-pod-cpu-hog
+            template: expand-chaos-pod-cpu-hog
             arguments:
               parameters:
+              - name: repeatNum
+                value: "{{workflow.parameters.repeatNum}}"
               - name: appLabel
                 value: "{{item}}"
-            withItems:
-            - user
-            - user-db
-            - shipping
-            - carts
-            - carts-db
-            - orders
-            - orders-db
-            - catalogue
-            - catalogue-db
-            - payment
-            - front-end
+            withParam: "{{workflow.parameters.appLabels}}"
+
+    - name: expand-chaos-pod-cpu-hog
+      inputs:
+        parameters:
+        - name: repeatNum
+        - name: appLabel
+      steps:
+      - - name: chaos-pod-cpu-hog-step
+          template: run-chaos-pod-cpu-hog
+          arguments:
+            parameters:
+            - name: jobN
+              value: "{{item}}"
+            - name: appLabel
+              value: "{{inputs.parameters.appLabel}}"
+          withSequence:
+            count: "{{inputs.parameters.repeatNum}}"
 
     - name: run-chaos-pod-cpu-hog
       inputs:
         parameters:
+        - name: jobN
         - name: appLabel
         artifacts:
         - name: run-chaos-pod-cpu-hog
@@ -48,7 +62,7 @@ spec:
               apiVersion: litmuschaos.io/v1alpha1
               kind: ChaosEngine
               metadata:
-                name: {{inputs.parameters.appLabel}}-chaos
+                name: {{inputs.parameters.appLabel}}-chaos-{{inputs.parameters.jobN}}
                 namespace: {{workflow.parameters.appNamespace}}
               spec:
                 annotationCheck: "false"
