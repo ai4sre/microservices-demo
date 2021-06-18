@@ -80,13 +80,12 @@ spec:
                     components:
                       env:
                       - name: TARGET_CONTAINER
-                        value: "{{inputs.parameters.appLabel}}”
+                        value: "{{inputs.parameters.appLabel}}"
                       - name: CPU_CORES
                         value: "2"
                       - name: TOTAL_CHAOS_DURATION
-                        value: "60"
-
+                        value: "30"
       container:
         image: lachlanevenson/k8s-kubectl
         command: [sh, -c]
-        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}} | echo "sleeping for 120s" | sleep 120 ']
+        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}} | echo "sleeping for 120s" | sleep 120 ']
