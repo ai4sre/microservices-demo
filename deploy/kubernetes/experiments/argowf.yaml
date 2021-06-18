@@ -18,6 +18,8 @@ spec:
           ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
       - name: repeatNum
         value: 3
+      - name: chaosIntervalSec
+        value: 1800 # 30min
   parallelism: 1
   templates:
     - name: argowf-chaos-pod-cpu-hog
@@ -38,8 +40,8 @@ spec:
         - name: repeatNum
         - name: appLabel
       steps:
-      - - name: chaos-pod-cpu-hog-step
-          template: run-chaos-pod-cpu-hog
+      - - name: expand-chaos-pod-cpu-hog-step
+          template: run-chaos-pod-cpu-hog-with-sleep
           arguments:
             parameters:
             - name: jobN
@@ -48,6 +50,36 @@ spec:
               value: "{{inputs.parameters.appLabel}}"
           withSequence:
             count: "{{inputs.parameters.repeatNum}}"
+
+    - name: run-chaos-pod-cpu-hog-with-sleep
+      inputs:
+        parameters:
+        - name: jobN
+        - name: appLabel
+      steps:
+      - - name: run-chaos-pod-cpu-hog-with-sleep-step
+          template: run-chaos-pod-cpu-hog
+          arguments:
+            parameters:
+            - name: jobN
+              value: "{{inputs.parameters.jobN}}"
+            - name: appLabel
+              value: "{{inputs.parameters.appLabel}}"
+        - name: sleep
+          template: sleep-n-sec
+          arguments:
+            parameters:
+            - name: seconds
+              value: "{{workspace.parameters.chaosIntervalSec}}"
+
+    - name: sleep-n-sec
+      inputs:
+        parameters:
+        - name: seconds
+      container:
+        image: alpine:latest
+        command: [sh, -c]
+        args: ["echo sleeping for {{inputs.parameters.seconds}} seconds; sleep {{inputs.parameters.seconds}}; echo done"]
 
     - name: run-chaos-pod-cpu-hog
       inputs:
@@ -88,4 +120,4 @@ spec:
       container:
         image: lachlanevenson/k8s-kubectl
         command: [sh, -c]
-        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}} | echo "sleeping for 120s" | sleep 120 ']
+        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}']
