@@ -6,5 +6,5 @@ exp/run:
 
 .PHONY: exp/run-for-checking
 exp/run-for-checking:
-	argo submit --watch experiments/argowf.yaml --parameter-file experiments/argowf-checking-params.yaml
+	argo submit --watch experiments/argowf.yaml --parameter-file experiments/argowf-checking-params.yaml || exit 1
 	argo delete @latest
