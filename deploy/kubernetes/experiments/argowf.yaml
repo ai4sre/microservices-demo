@@ -18,6 +18,8 @@ spec:
           ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
       - name: repeatNum
         value: 3
+      - name: chaosDurationSec
+        value: 60
       - name: chaosIntervalSec
         value: 1800 # 30min
   parallelism: 1
@@ -169,7 +171,7 @@ spec:
                       - name: CPU_CORES
                         value: "2"
                       - name: TOTAL_CHAOS_DURATION
-                        value: "30"
+                        value: "{{workflow.parameters.chaosDurationSec}}"
       container:
         image: lachlanevenson/k8s-kubectl
         command: [sh, -c]
@@ -208,7 +210,7 @@ spec:
                       - name: TARGET_CONTAINER
                         value: "{{inputs.parameters.appLabel}}"
                       - name: TOTAL_CHAOS_DURATION
-                        value: "30"
+                        value: "{{workflow.parameters.chaosDurationSec}}"
                       - name: NETWORK_INTERFACE
                         value: "eth0"
                       - name: NETWORK_PACKET_LOSS_PERCENTAGE

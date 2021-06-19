@@ -1,4 +1,5 @@
 repeatNum: 1
+chaosDurationSec: 10 # 10sec
 chaosIntervalSec: 10 # 10sec
 appLabels: |
   ["user-db","shipping","orders-db"]
