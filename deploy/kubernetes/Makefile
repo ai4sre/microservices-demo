@@ -1,5 +1,5 @@
 ARGO_MANIFEST_CUE=experiments/argowf.cue
-CUE_EXPORT=cue export --out yaml $(ARGO_MANIFEST_CUE)
+CUE_EXPORT=cue eval --out yaml $(ARGO_MANIFEST_CUE)
 
 .PHONY: exp/run
 exp/run:
