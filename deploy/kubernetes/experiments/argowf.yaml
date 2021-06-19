@@ -3,7 +3,7 @@ kind: Workflow
 metadata:
   generateName: argowf-chaos-
 spec:
-  entrypoint: argowf-chaos-pod-cpu-hog
+  entrypoint: argowf-chaos
   serviceAccountName: argo-chaos
   arguments:
     parameters:
@@ -22,10 +22,20 @@ spec:
         value: 1800 # 30min
   parallelism: 1
   templates:
-    - name: argowf-chaos-pod-cpu-hog
+    - name: argowf-chaos
       steps:
       -   - name: run-chaos-pod-cpu-hog
             template: expand-chaos-pod-cpu-hog
+            arguments:
+              parameters:
+              - name: repeatNum
+                value: "{{workflow.parameters.repeatNum}}"
+              - name: appLabel
+                value: "{{item}}"
+            withParam: "{{workflow.parameters.appLabels}}"
+
+      -   - name: run-chaos-pod-network-loss
+            template: expand-chaos-pod-network-loss
             arguments:
               parameters:
               - name: repeatNum
@@ -44,6 +54,27 @@ spec:
           template: run-chaos-pod-cpu-hog-with-sleep
           arguments:
             parameters:
+            - name: chapsType
+              value: pod-cpu-hog
+            - name: jobN
+              value: "{{item}}"
+            - name: appLabel
+              value: "{{inputs.parameters.appLabel}}"
+          withSequence:
+            count: "{{inputs.parameters.repeatNum}}"
+
+    - name: expand-chaos-pod-network-loss
+      inputs:
+        parameters:
+        - name: repeatNum
+        - name: appLabel
+      steps:
+      - - name: expand-chaos-pod-network-loss-step
+          template: run-chaos-pod-network-loss-with-sleep
+          arguments:
+            parameters:
+            - name: chapsType
+              value: pod-cpu-hog
             - name: jobN
               value: "{{item}}"
             - name: appLabel
@@ -54,11 +85,33 @@ spec:
     - name: run-chaos-pod-cpu-hog-with-sleep
       inputs:
         parameters:
+        - name: chapsType
         - name: jobN
         - name: appLabel
       steps:
       - - name: run-chaos-pod-cpu-hog-with-sleep-step
           template: run-chaos-pod-cpu-hog
+          arguments:
+            parameters:
+            - name: jobN
+              value: "{{inputs.parameters.jobN}}"
+            - name: appLabel
+              value: "{{inputs.parameters.appLabel}}"
+        - name: sleep
+          template: sleep-n-sec
+          arguments:
+            parameters:
+            - name: seconds
+              value: "{{workspace.parameters.chaosIntervalSec}}"
+
+    - name: run-chaos-pod-network-loss-with-sleep
+      inputs:
+        parameters:
+        - name: jobN
+        - name: appLabel
+      steps:
+      - - name: run-chaos-pod-network-loss-with-sleep-step
+          template: run-chaos-pod-network-loss
           arguments:
             parameters:
             - name: jobN
@@ -117,6 +170,51 @@ spec:
                         value: "2"
                       - name: TOTAL_CHAOS_DURATION
                         value: "30"
+      container:
+        image: lachlanevenson/k8s-kubectl
+        command: [sh, -c]
+        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}']
+
+    - name: run-chaos-pod-network-loss
+      inputs:
+        parameters:
+        - name: jobN
+        - name: appLabel
+        artifacts:
+        - name: run-chaos-pod-network-loss
+          path: /tmp/chaosengine.yaml
+          raw:
+            data: |
+              apiVersion: litmuschaos.io/v1alpha1
+              kind: ChaosEngine
+              metadata:
+                name: {{inputs.parameters.appLabel}}-chaos-{{inputs.parameters.jobN}}
+                namespace: {{workflow.parameters.appNamespace}}
+              spec:
+                annotationCheck: "false"
+                engineState: active
+                monitoring: true
+                appinfo:
+                  appns: {{workflow.parameters.appNamespace}}
+                  applabel: name={{inputs.parameters.appLabel}}
+                  appkind: deployment
+                chaosServiceAccount: {{workflow.parameters.chaosServiceAccount}}
+                jobCleanUpPolicy: delete
+                experiments:
+                - name: pod-network-loss
+                  spec:
+                    components:
+                      env:
+                      - name: TARGET_CONTAINER
+                        value: "{{inputs.parameters.appLabel}}"
+                      - name: TOTAL_CHAOS_DURATION
+                        value: "30"
+                      - name: NETWORK_INTERFACE
+                        value: "eth0"
+                      - name: NETWORK_PACKET_LOSS_PERCENTAGE
+                        value: "60"
+                      - name: "SOCKET_PATH"
+                        value: "/var/run/docker.sock"
       container:
         image: lachlanevenson/k8s-kubectl
         command: [sh, -c]
