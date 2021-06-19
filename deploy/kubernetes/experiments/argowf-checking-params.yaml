@@ -1,0 +1,4 @@
+repeatNum: 1
+chaosIntervalSec: 10 # 10sec
+appLabels: |
+  ["user-db","shipping","orders-db"]
