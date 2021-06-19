@@ -5,6 +5,8 @@ metadata:
   name: catalogue-db
   labels:
     name: catalogue-db
+  annotations:
+    litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
   replicas: 1

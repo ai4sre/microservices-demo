@@ -5,6 +5,8 @@ metadata:
   name: carts
   labels:
     name: carts
+  annotations:
+    litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
   replicas: 1

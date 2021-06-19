@@ -12,6 +12,7 @@ provisioner: kubernetes.io/gce-pd
 parameters:
   type: pd-ssd
   replication-type: none
+allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
 ---
 apiVersion: apps/v1

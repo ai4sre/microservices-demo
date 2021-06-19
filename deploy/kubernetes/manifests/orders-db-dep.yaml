@@ -5,6 +5,8 @@ metadata:
   name: orders-db
   labels:
     name: orders-db
+  annotations:
+    litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
   replicas: 1

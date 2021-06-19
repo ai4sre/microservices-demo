@@ -5,6 +5,8 @@ metadata:
   name: payment
   labels:
     name: payment
+  annotations:
+    litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
   replicas: 1

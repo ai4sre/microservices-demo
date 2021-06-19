@@ -5,6 +5,8 @@ metadata:
   name: user
   labels:
     name: user
+  annotations:
+    litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
   replicas: 1

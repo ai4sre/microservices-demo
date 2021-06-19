@@ -5,6 +5,8 @@ metadata:
   name: session-db
   labels:
     name: session-db
+  annotations:
+    litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
   replicas: 1
