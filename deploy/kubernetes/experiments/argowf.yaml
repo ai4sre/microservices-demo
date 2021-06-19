@@ -102,7 +102,7 @@ spec:
           arguments:
             parameters:
             - name: seconds
-              value: "{{workspace.parameters.chaosIntervalSec}}"
+              value: "{{workflow.parameters.chaosIntervalSec}}"
 
     - name: run-chaos-pod-network-loss-with-sleep
       inputs:
@@ -123,7 +123,7 @@ spec:
           arguments:
             parameters:
             - name: seconds
-              value: "{{workspace.parameters.chaosIntervalSec}}"
+              value: "{{workflow.parameters.chaosIntervalSec}}"
 
     - name: sleep-n-sec
       inputs:
