@@ -1,4 +1,9 @@
 import "encoding/yaml"
+import "encoding/json"
+import "strings"
+
+#chaosTypes: ["pod-cpu-hog", "pod-network-loss"]
+#appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
 apiVersion: "argoproj.io/v1alpha1"
 kind:       "Workflow"
@@ -17,9 +22,8 @@ spec: {
 		value: "sock-shop-chaos-engine"
 	}, {
 		name: "appLabels"
-		value: """
-			[\"user\",\"user-db\",\"shipping\",\"carts\",\"carts-db\",\"orders\",\"orders-db\",\"catalogue\",\"catalogue-db\",\"payment\",\"front-end\"]
-			"""
+		value: json.Marshal(_cue_app_labels)
+		_cue_app_labels: #appLabels
 	}, {
 		name:  "repeatNum"
 		value: 3
@@ -32,13 +36,16 @@ spec: {
 	}, {
 		name:  "chaosIntervalSec"
 		value: 1800 // 30min
+	}, {
+		name: "chaosTypes"
+		value: strings.Join(#chaosTypes, ",")
 	}]
 	parallelism: 1
 	templates: [{
 		name: "argowf-chaos"
-		steps: [ [{
-			name:     "run-chaos-pod-cpu-hog"
-			template: "expand-chaos-pod-cpu-hog"
+		steps: [ [ for type in #chaosTypes {
+			name:     "run-chaos-\( type )"
+			template: "expand-chaos-\( type )"
 			arguments: parameters: [{
 				name:  "repeatNum"
 				value: "{{workflow.parameters.repeatNum}}"
@@ -47,29 +54,17 @@ spec: {
 				value: "{{item}}"
 			}]
 			withParam: "{{workflow.parameters.appLabels}}"
-		}], [{
-			name:     "run-chaos-pod-network-loss"
-			template: "expand-chaos-pod-network-loss"
-			arguments: parameters: [{
-				name:  "repeatNum"
-				value: "{{workflow.parameters.repeatNum}}"
-			}, {
-				name:  "appLabel"
-				value: "{{item}}"
-			}]
-			withParam: "{{workflow.parameters.appLabels}}"
-		}],
-		]
-	}, {
-		name: "expand-chaos-pod-cpu-hog"
+		},] ]
+	}, for type in #chaosTypes {
+		name: "expand-chaos-\( type )"
 		inputs: parameters: [{
 			name: "repeatNum"
 		}, {
 			name: "appLabel"
 		}]
 		steps: [ [{
-			name:     "expand-chaos-pod-cpu-hog-step"
-			template: "run-chaos-pod-cpu-hog-with-sleep"
+			name:     "expand-chaos-\( type )-step"
+			template: "run-chaos-\( type )-with-sleep"
 			arguments: parameters: [{
 				name:  "jobN"
 				value: "{{item}}"
@@ -80,62 +75,16 @@ spec: {
 			withSequence: count: "{{inputs.parameters.repeatNum}}"
 		}],
 		]
-	}, {
-		name: "expand-chaos-pod-network-loss"
-		inputs: parameters: [{
-			name: "repeatNum"
-		}, {
-			name: "appLabel"
-		}]
-		steps: [ [{
-			name:     "expand-chaos-pod-network-loss-step"
-			template: "run-chaos-pod-network-loss-with-sleep"
-			arguments: parameters: [{
-				name:  "jobN"
-				value: "{{item}}"
-			}, {
-				name:  "appLabel"
-				value: "{{inputs.parameters.appLabel}}"
-			}]
-			withSequence: count: "{{inputs.parameters.repeatNum}}"
-		}],
-		]
-	}, {
-		name: "run-chaos-pod-cpu-hog-with-sleep"
+	}, for type in #chaosTypes {
+		name: "run-chaos-\( type )-with-sleep"
 		inputs: parameters: [{
 			name: "jobN"
 		}, {
 			name: "appLabel"
 		}]
 		steps: [ [{
-			name:     "run-chaos-pod-cpu-hog-with-sleep-step"
-			template: "run-chaos-pod-cpu-hog"
-			arguments: parameters: [{
-				name:  "jobN"
-				value: "{{inputs.parameters.jobN}}"
-			}, {
-				name:  "appLabel"
-				value: "{{inputs.parameters.appLabel}}"
-			}]
-		}, {
-			name:     "sleep"
-			template: "sleep-n-sec"
-			arguments: parameters: [{
-				name:  "seconds"
-				value: "{{workflow.parameters.chaosIntervalSec}}"
-			}]
-		}],
-		]
-	}, {
-		name: "run-chaos-pod-network-loss-with-sleep"
-		inputs: parameters: [{
-			name: "jobN"
-		}, {
-			name: "appLabel"
-		}]
-		steps: [ [{
-			name:     "run-chaos-pod-network-loss-with-sleep-step"
-			template: "run-chaos-pod-network-loss"
+			name:     "run-chaos-\( type )-with-sleep-step"
+			template: "run-chaos-\( type )"
 			arguments: parameters: [{
 				name:  "jobN"
 				value: "{{inputs.parameters.jobN}}"
@@ -185,7 +134,7 @@ spec: {
 						monitoring:      true
 						appinfo: {
 							appns: "sock-shop"
-							applabel: "name={{workflow.parameters.appNamespace}}"
+							appLabel: "name={{input.parameters.appLabel}}"
 							appkind:  "deployment"
 						}
 						chaosServiceAccount: "{{workflow.parameters.chaosServiceAccount}}"
@@ -207,7 +156,6 @@ spec: {
 				}
 			}]
 		}
-
 		container: {
 			image: "lachlanevenson/k8s-kubectl"
 			command: ["sh", "-c"]
@@ -236,7 +184,7 @@ spec: {
 						monitoring:      true
 						appinfo: {
 							appns: "sock-shop"
-							applabel: "name=carts-db"
+							appLabel: "name={{input.parameters.appLabel}}"
 							appkind:  "deployment"
 						}
 						chaosServiceAccount: "{{workflow.parameters.chaosServiceAccount}}"
@@ -264,7 +212,6 @@ spec: {
 				}
 			}]
 		}
-
 		container: {
 			image: "lachlanevenson/k8s-kubectl"
 			command: ["sh", "-c"]
