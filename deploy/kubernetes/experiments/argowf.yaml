@@ -20,6 +20,8 @@ spec:
         value: 3
       - name: chaosDurationSec
         value: 60
+      - name: chaosWaitSec # should be larger than chaosDurationSec
+        value: 100
       - name: chaosIntervalSec
         value: 1800 # 30min
   parallelism: 1
@@ -175,7 +177,7 @@ spec:
       container:
         image: lachlanevenson/k8s-kubectl
         command: [sh, -c]
-        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}']
+        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}; echo "waiting {{workflow.parameters.chaosWaitSec}}s"; sleep {{workflow.parameters.chaosWaitSec}}']
 
     - name: run-chaos-pod-network-loss
       inputs:
@@ -220,4 +222,4 @@ spec:
       container:
         image: lachlanevenson/k8s-kubectl
         command: [sh, -c]
-        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}']
+        args: ['kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}; echo "waiting {{workflow.parameters.chaosWaitSec}}s"; sleep {{workflow.parameters.chaosWaitSec}}']
