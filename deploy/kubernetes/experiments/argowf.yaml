@@ -58,8 +58,6 @@ spec:
           template: run-chaos-pod-cpu-hog-with-sleep
           arguments:
             parameters:
-            - name: chapsType
-              value: pod-cpu-hog
             - name: jobN
               value: "{{item}}"
             - name: appLabel
@@ -77,8 +75,6 @@ spec:
           template: run-chaos-pod-network-loss-with-sleep
           arguments:
             parameters:
-            - name: chapsType
-              value: pod-cpu-hog
             - name: jobN
               value: "{{item}}"
             - name: appLabel
@@ -89,7 +85,6 @@ spec:
     - name: run-chaos-pod-cpu-hog-with-sleep
       inputs:
         parameters:
-        - name: chapsType
         - name: jobN
         - name: appLabel
       steps:
