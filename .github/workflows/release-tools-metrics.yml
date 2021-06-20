@@ -28,5 +28,6 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v2
         with:
+          context: tools/metrics
           push: true
           tags: ${{ env.DOCKER_BASE_NAME }}:latest
