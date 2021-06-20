@@ -29,4 +29,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${DOCKER_BASE_NAME}:latest
+          tags: ${{ env.DOCKER_BASE_NAME }}:latest
