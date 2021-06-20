@@ -338,8 +338,9 @@ def time_range_from_args(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--prometheus-url", help="endpoint URL for prometheus server",
-                                default="http://localhost:9090")
+    parser.add_argument("--prometheus-url", 
+                        help="endpoint URL for prometheus server",
+                        default="http://localhost:9090")
     parser.add_argument("--start", help="start epoch time", type=int)
     parser.add_argument("--end", help="end epoch time", type=int)
     parser.add_argument("--step", help="step seconds", type=int, default=STEP)
@@ -358,32 +359,61 @@ def main():
 
     # get container metrics (cAdvisor)
     container_targets = get_targets(args.prometheus_url, "kubernetes-cadvisor")
-    container_selector = 'namespace="sock-shop",container=~"{}|POD"'.format('|'.join(COMPONENT_LABELS))
-    container_metrics = get_metrics(args.prometheus_url, container_targets, start, end, args.step, container_selector)
+    container_selector = 'namespace="sock-shop",container=~"{}|POD"'.format(
+        '|'.join(COMPONENT_LABELS))
+    container_metrics = get_metrics(args.prometheus_url, container_targets,
+                                    start, end, args.step, container_selector)
 
     # get pod metrics
     pod_targets = get_targets(args.prometheus_url, "sock-shop/.*")
     pod_selector = 'job=~"sock-shop/.*"'
-    pod_metrics = get_metrics(args.prometheus_url, pod_targets, start, end, args.step, pod_selector)
+    pod_metrics = get_metrics(args.prometheus_url, pod_targets,
+                              start, end, args.step, pod_selector)
 
     # get node metrics (node-exporter)
     node_targets = get_targets(args.prometheus_url, "monitoring/")
     node_selector = 'job="monitoring/"'
-    node_metrics = get_metrics(args.prometheus_url, node_targets, start, end, args.step, node_selector)
+    node_metrics = get_metrics(args.prometheus_url, node_targets,
+                               start, end, args.step, node_selector)
 
     # get service metrics
     throughput_metrics = get_metrics_by_query_range(
-        args.prometheus_url, start, end, args.step,
-            'sum by (name) (rate(request_duration_seconds_count{job="kubernetes-service-endpoints",kubernetes_namespace="sock-shop"}[1m]))',
-            {'metric': 'request_duration_seconds_count', 'type': 'gauge'},
+        args.prometheus_url, start, end, args.step, """
+            sum by (name) (
+                rate(
+                    request_duration_seconds_count{
+                        job="kubernetes-service-endpoints",
+                        kubernetes_namespace="sock-shop"
+                    }[1m]
+                )
+            )
+            """,
+        {'metric': 'request_duration_seconds_count', 'type': 'gauge'},
     )
     latency_metrics = get_metrics_by_query_range(
-        args.prometheus_url, start, end, args.step,
-        'sum by (name) (rate(request_duration_seconds_sum{job="kubernetes-service-endpoints",kubernetes_namespace="sock-shop"}[1m])) / sum by (name) (rate(request_duration_seconds_count{job="kubernetes-service-endpoints",kubernetes_namespace="sock-shop"}[1m]))',
+        args.prometheus_url, start, end, args.step, """
+            sum by (name) (
+                rate(
+                    request_duration_seconds_sum{
+                        job="kubernetes-service-endpoints",
+                        kubernetes_namespace="sock-shop"
+                    }[1m]
+                )
+            ) / sum by (name) (
+                rate(
+                    request_duration_seconds_count{
+                        job="kubernetes-service-endpoints",
+                        kubernetes_namespace="sock-shop"
+                    }[1m]
+                )
+            )
+            """,
         {'metric': 'request_duration_seconds_sum', 'type': 'gauge'},
     )
 
-    result = metrics_as_result(container_metrics, pod_metrics, node_metrics, throughput_metrics, latency_metrics, {
+    result = metrics_as_result(
+        container_metrics, pod_metrics,
+        node_metrics, throughput_metrics, latency_metrics, {
         'start': start,
         'end': end,
         'step': args.step,
