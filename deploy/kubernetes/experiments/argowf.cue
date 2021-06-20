@@ -5,6 +5,12 @@ import "strings"
 #chaosTypes: ["pod-cpu-hog", "pod-network-loss"]
 #appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
+#container: {
+	image: "lachlanevenson/k8s-kubectl"
+	command: ["sh", "-c"]
+	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
+}
+
 apiVersion: "argoproj.io/v1alpha1"
 kind:       "Workflow"
 metadata: generateName: "argowf-chaos-"
@@ -156,11 +162,7 @@ spec: {
 				}
 			}]
 		}
-		container: {
-			image: "lachlanevenson/k8s-kubectl"
-			command: ["sh", "-c"]
-			args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
-		}
+		container: #container
 	}, {
 		name: "run-chaos-pod-network-loss"
 		inputs: {
@@ -212,10 +214,6 @@ spec: {
 				}
 			}]
 		}
-		container: {
-			image: "lachlanevenson/k8s-kubectl"
-			command: ["sh", "-c"]
-			args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
-		}
+		container: #container
 	}]
 }
