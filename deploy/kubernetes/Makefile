@@ -10,3 +10,7 @@ exp/run:
 exp/run-for-checking:
 	$(CUE_EXPORT) | argo submit --watch - --parameter-file experiments/argowf-checking-params.yaml || exit 1
 	argo delete @latest
+
+.PHONY: exp/print-yaml
+exp/print-yaml:
+	$(CUE_EXPORT)
