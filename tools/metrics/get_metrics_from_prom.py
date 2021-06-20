@@ -41,7 +41,11 @@ import json
 import sys
 import urllib.request
 
-COMPONENT_LABELS = {"front-end", "orders", "orders-db", "carts", "carts-db", "shipping", "user", "user-db", "payment", "catalogue", "catalogue-db", "queue-master", "rabbitmq"}
+COMPONENT_LABELS = {
+    "front-end", "orders", "orders-db", "carts", "carts-db",
+    "shipping", "user", "user-db", "payment", "catalogue", "catalogue-db",
+    "queue-master", "rabbitmq",
+}
 STEP = 5
 NAN = 'nan'
 
@@ -115,7 +119,8 @@ def get_metrics(url, targets, start, end, step, selector):
                 "end": end,
                 "step": '{}s'.format(step),
             }
-            futures.append(executor.submit(request_query_range, url, params, target))
+            res = executor.submit(request_query_range, url, params, target)
+            futures.append(res)
         executor.shutdown()
 
     concated_metrics = []
@@ -158,7 +163,7 @@ def interpotate_time_series(values, time_meta):
 
     # end check
     last_ts = values[-1][0]
-    if (lost_num := int((end - last_ts)/ step)) > 0:
+    if (lost_num := int((end - last_ts) / step)) > 0:
         for j in range(lost_num):
             new_values.append([last_ts + step*(j+1), NAN])
 
@@ -171,7 +176,8 @@ def support_set_default(obj):
     raise TypeError(repr(obj) + " is not JSON serializable")
 
 
-def metrics_as_result(container_metrics, pod_metrics, node_metrics, throughput_metrics, latency_metrics, time_meta):
+def metrics_as_result(container_metrics, pod_metrics, node_metrics,
+                      throughput_metrics, latency_metrics, time_meta):
     grafana_url = PROM_GRAFANA[time_meta['prometheus_url']]
     start, end = time_meta['start'], time_meta['end']
     data = {
