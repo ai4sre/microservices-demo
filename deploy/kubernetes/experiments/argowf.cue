@@ -166,8 +166,10 @@ spec: {
 				_cue_chaos_engine: {
 					apiVersion: "litmuschaos.io/v1alpha1"
 					kind: "ChaosEngine"
-					metadata: "{{inputs.parameters.appLabel}}-chaos-{{inputs.parameters.jobN}}"
-					namespace: "{{workflow.parameters.appNamespace}}"
+					metadata: {
+						name: "{{inputs.parameters.appLabel}}-chaos-{{inputs.parameters.jobN}}"
+						namespace: "{{workflow.parameters.appNamespace}}"
+					}
 					spec: {
 						annotationCheck: "false"
 						engineState:     "active"
