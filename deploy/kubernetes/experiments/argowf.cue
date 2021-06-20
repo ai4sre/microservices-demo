@@ -10,6 +10,40 @@ import "strings"
 	command: ["sh", "-c"]
 	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
 }
+#chaosTypeToExps: {
+	"pod-cpu-hog": [{
+		name: "pod-cpu-hog"
+		spec: components: env: [{
+			name:  "TARGET_CONTAINER"
+			value: "{{inputs.parameters.appLabel}}"
+		}, {
+			name:  "CPU_CORES"
+			value: "2"
+		}, {
+			name:  "TOTAL_CHAOS_DURATION"
+			value: "{{workflow.parameters.chaosDurationSec}}"
+		}]
+	}]
+	"pod-network-loss": [{
+		name: "pod-network-loss"
+		spec: components: env: [{
+			name:  "TARGET_CONTAINER"
+			value: "{{inputs.parameters.appLabel}}"
+		}, {
+			name:  "NETWORK_INTERFACE"
+			value: "eth0"
+		}, {
+			name: "NETWORK_PACKET_LOSS_PERCENTAGE"
+			value: "60"
+		}, {
+			name: "SOCKET_PATH"
+			value: "/var/run/docker.sock"
+		}, {
+			name:  "TOTAL_CHAOS_DURATION"
+			value: "{{workflow.parameters.chaosDurationSec}}"
+		}]
+	}],
+}
 
 apiVersion: "argoproj.io/v1alpha1"
 kind:       "Workflow"
@@ -117,8 +151,8 @@ spec: {
 			command: ["sh", "-c"]
 			args: ["echo sleeping for {{inputs.parameters.seconds}} seconds; sleep {{inputs.parameters.seconds}}; echo done"]
 		}
-	}, {
-		name: "run-chaos-pod-cpu-hog"
+	}, for type, exps in #chaosTypeToExps {
+		name: "run-chaos-\( type )"
 		inputs: {
 			parameters: [{
 				name: "jobN"
@@ -126,7 +160,7 @@ spec: {
 				name: "appLabel"
 			}]
 			artifacts: [{
-				name: "run-chaos-pod-cpu-hog"
+				name: "run-chaos-\( type )"
 				path: "/tmp/chaosengine.yaml"
 				raw: data: yaml.Marshal(_cue_chaos_engine)
 				_cue_chaos_engine: {
@@ -145,71 +179,7 @@ spec: {
 						}
 						chaosServiceAccount: "{{workflow.parameters.chaosServiceAccount}}"
 						jobCleanUpPolicy:    "delete"
-						experiments: [{
-							name: "pod-cpu-hog"
-							spec: components: env: [{
-								name:  "TARGET_CONTAINER"
-								value: "{{inputs.parameters.appLabel}}"
-							}, {
-								name:  "CPU_CORES"
-								value: "2"
-							}, {
-								name:  "TOTAL_CHAOS_DURATION"
-								value: "{{workflow.parameters.chaosDurationSec}}"
-							}]
-						}]
-					}
-				}
-			}]
-		}
-		container: #container
-	}, {
-		name: "run-chaos-pod-network-loss"
-		inputs: {
-			parameters: [{
-				name: "jobN"
-			}, {
-				name: "appLabel"
-			}]
-			artifacts: [{
-				name: "run-chaos-pod-network-loss"
-				path: "/tmp/chaosengine.yaml"
-				raw: data: yaml.Marshal(_cue_chaos_engine)
-				_cue_chaos_engine: {
-					apiVersion: "litmuschaos.io/v1alpha1"
-					kind: "ChaosEngine"
-					metadata: "{{inputs.parameters.appLabel}}-chaos-{{inputs.parameters.jobN}}"
-					namespace: "{{workflow.parameters.appNamespace}}"
-					spec: {
-						annotationCheck: "false"
-						engineState:     "active"
-						monitoring:      true
-						appinfo: {
-							appns: "sock-shop"
-							appLabel: "name={{input.parameters.appLabel}}"
-							appkind:  "deployment"
-						}
-						chaosServiceAccount: "{{workflow.parameters.chaosServiceAccount}}"
-						jobCleanUpPolicy:    "delete"
-						experiments: [{
-							name: "pod-network-loss"
-							spec: components: env: [{
-								name:  "TARGET_CONTAINER"
-								value: "{{inputs.parameters.appLabel}}"
-							}, {
-								name:  "NETWORK_INTERFACE"
-								value: "eth0"
-							}, {
-								name: "NETWORK_PACKET_LOSS_PERCENTAGE"
-								value: "60"
-							}, {
-								name: "SOCKET_PATH"
-								value: "/var/run/docker.sock"
-							}, {
-								name:  "TOTAL_CHAOS_DURATION"
-								value: "{{workflow.parameters.chaosDurationSec}}"
-							}]
-						}]
+						experiments: exps
 					}
 				}
 			}]
