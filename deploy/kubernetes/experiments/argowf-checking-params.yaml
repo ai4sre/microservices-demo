@@ -1,0 +1,8 @@
+repeatNum: 1
+chaosDurationSec: 10 # 10sec
+chaosWaitSec: 30    # 30sec
+chaosIntervalSec: 10 # 10sec
+appLabels:
+  - user-db
+  - shipping
+  - orders-db
