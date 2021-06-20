@@ -300,6 +300,9 @@ def metrics_as_result(container_metrics, pod_metrics, node_metrics, throughput_m
 
 
 def time_range_from_args(args):
+    """
+    get unix timestamps range (start to end) from duration
+    """
     duration = datetime.timedelta(seconds=0)
     dt = args.duration
     if dt.endswith("s") or dt.endswith("sec"):
