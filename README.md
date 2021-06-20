@@ -1,31 +1,17 @@
-[![Build Status](https://travis-ci.org/microservices-demo/microservices-demo.svg?branch=master)](https://travis-ci.org/microservices-demo/microservices-demo)
+# AIOps Experimental Infrastructure with a Microservice Demo Application (Sock Shop)
 
-# Sock Shop : A Microservice Demo Application
+This project build an experimental infrastructure for AIOps. (Work in Progress)
 
-The application is the user-facing part of an online shop that sells socks. It is intended to aid the demonstration and testing of microservice and cloud native technologies.
+1. Generate automatically MELT (Metrics, Events, Logs, Traces) data including performance anomaly.
+2. Analyze the generated data with machine learning algorithms.
 
-It is built using [Spring Boot](http://projects.spring.io/spring-boot/), [Go kit](http://gokit.io) and [Node.js](https://nodejs.org/) and is packaged in Docker containers.
+This repository is forked from [microservices-demon/microservices-demo](https://github.com/microservices-demo/microservices-demo).
 
-You can read more about the [application design](./internal-docs/design.md).
+## How to deploy
 
-## Deployment Platforms
+TBD
 
-The [deploy folder](./deploy/) contains scripts and instructions to provision the application onto your favourite platform. 
+## LICENSE
 
-Please let us know if there is a platform that you would like to see supported.
-
-## Bugs, Feature Requests and Contributing
-
-We'd love to see community contributions. We like to keep it simple and use Github issues to track bugs and feature requests and pull requests to manage contributions. See the [contribution information](.github/CONTRIBUTING.md) for more information.
-
-## Screenshot
-
-![Sock Shop frontend](https://github.com/microservices-demo/microservices-demo.github.io/raw/master/assets/sockshop-frontend.png)
-
-## Visualizing the application
-
-Use [Weave Scope](http://weave.works/products/weave-scope/) or [Weave Cloud](http://cloud.weave.works/) to visualize the application once it's running in the selected [target platform](./deploy/).
-
-![Sock Shop in Weave Scope](https://github.com/microservices-demo/microservices-demo.github.io/raw/master/assets/sockshop-scope.png)
-
-## 
+Copyright 2021 Yuuki Tsubouchi
+This repository is licensed under the Apache License Version 2.0. [LICENSE](./LICENSE)
