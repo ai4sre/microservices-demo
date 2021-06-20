@@ -303,6 +303,7 @@ def time_range_from_args(args):
     """
     get unix timestamps range (start to end) from duration
     """
+
     duration = datetime.timedelta(seconds=0)
     dt = args.duration
     if dt.endswith("s") or dt.endswith("sec"):
@@ -312,10 +313,9 @@ def time_range_from_args(args):
     elif dt.endswith("h") or dt.endswith("hours"):
         duration = datetime.timedelta(hours=int(dt[:-1]))
     else:
-        parser.print_help()
-        exit(-1)
-    duration = int(duration.total_seconds())
+        raise ValueError("args.duration is invalid format")
 
+    duration = int(duration.total_seconds())
     now = int(datetime.datetime.now().timestamp())
     start, end = now - duration, now
     if args.end is None and args.start is None:
@@ -346,9 +346,12 @@ def main():
     parser.add_argument("--duration", help="", type=str, default="30m")
     args = parser.parse_args()
 
-    start, end = time_range_from_args(args)
-    if start > end:
-        print("start must be lower than end.", file=sys.stderr)
+    try:
+        start, end = time_range_from_args(args)
+        if start > end:
+            print("start must be lower than end.", file=sys.stderr)
+            parser.print_help()
+    except ValueError:
         parser.print_help()
 
     # get container metrics (cAdvisor)
