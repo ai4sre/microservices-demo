@@ -351,8 +351,10 @@ def main():
         if start > end:
             print("start must be lower than end.", file=sys.stderr)
             parser.print_help()
+            exit(-1)
     except ValueError:
         parser.print_help()
+        exit(-1)
 
     # get container metrics (cAdvisor)
     container_targets = get_targets(args.prometheus_url, "kubernetes-cadvisor")
