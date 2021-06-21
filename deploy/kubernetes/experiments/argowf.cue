@@ -133,6 +133,13 @@ spec: {
 				value: "{{inputs.parameters.appLabel}}"
 			}]
 		}, {
+			name:     "get-metrics"
+			template: "get-metrics-from-prometheus"
+			arguments: parameters: [{
+				name:  "seconds"
+				value: "{{workflow.parameters.chaosIntervalSec}}"
+			}]
+		}, {
 			name:     "sleep"
 			template: "sleep-n-sec"
 			arguments: parameters: [{
@@ -141,6 +148,16 @@ spec: {
 			}]
 		}],
 		]
+	}, {
+		name: "get-metrics-from-prometheus"
+		container: {
+			image: "ghcr.io/ai4sre/metrics-tools:latest"
+			imagePullPolicy: "Always"
+			args: [
+				"--prometheus-url", "http://prometheus.monitoring.svc.cluster.local:9090",
+				"--grafana-url", "http://grafana.monitoring.svc.cluster.local:3000",
+			]
+		}
 	}, {
 		name: "sleep-n-sec"
 		inputs: parameters: [{
@@ -175,7 +192,7 @@ spec: {
 						engineState:     "active"
 						monitoring:      true
 						appinfo: {
-							appns: "sock-shop"
+							appns: "{{workflow.parameters.appNamespace}}"
 							appLabel: "name={{input.parameters.appLabel}}"
 							appkind:  "deployment"
 						}
