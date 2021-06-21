@@ -48,11 +48,6 @@ COMPONENT_LABELS = {
 }
 STEP = 5
 NAN = 'nan'
-
-PROM_GRAFANA = {
-    'http://prometheus01.prv': 'http://grafana01.prv',
-    'http://prometheus02.prv': 'http://grafana02.prv',
-}
 GRAFANA_DASHBOARD = "d/3cHU4RSMk/sock-shop-performance"
 
 
@@ -178,13 +173,15 @@ def support_set_default(obj):
 
 def metrics_as_result(container_metrics, pod_metrics, node_metrics,
                       throughput_metrics, latency_metrics, time_meta):
-    grafana_url = PROM_GRAFANA[time_meta['prometheus_url']]
     start, end = time_meta['start'], time_meta['end']
+    grafana_url = time_meta['grafana_url']
+    dashboard_url = f"{grafana_url}/{GRAFANA_DASHBOARD}?orgId=1&from={start}000&to={end}000"
+
     data = {
         'meta': {
             'prometheus_url': time_meta['prometheus_url'],
             'grafana_url': grafana_url,
-            'grafana_dashboard_url': f"{grafana_url}/{GRAFANA_DASHBOARD}?orgId=1&from={start}000&to={end}000",
+            'grafana_dashboard_url': dashboard_url,
             'start': start,
             'end': end,
             'step': time_meta['step'],
@@ -347,6 +344,9 @@ def main():
     parser.add_argument("--prometheus-url",
                         help="endpoint URL for prometheus server",
                         default="http://localhost:9090")
+    parser.add_argument("--grafana-url",
+                        help="endpoint URL for grafana server",
+                        default="http://localhost:3000")
     parser.add_argument("--start", help="start epoch time", type=int)
     parser.add_argument("--end", help="end epoch time", type=int)
     parser.add_argument("--step", help="step seconds", type=int, default=STEP)
@@ -424,6 +424,7 @@ def main():
             'end': end,
             'step': args.step,
             'prometheus_url': args.prometheus_url,
+            'grafana_url': args.grafana_url,
     })
 
     print(json.dumps(result, default=support_set_default))
