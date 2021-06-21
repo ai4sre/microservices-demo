@@ -152,7 +152,7 @@ spec: {
 		name: "get-metrics-from-prometheus"
 		container: {
 			image: "ghcr.io/ai4sre/metrics-tools:latest"
-			imagePullPolicy: "always"
+			imagePullPolicy: "Always"
 			args: [
 				"--prometheus-url", "http://prometheus:9090",
 				"--grafana-url", "http://grafana:3000",
