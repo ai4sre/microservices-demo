@@ -159,7 +159,7 @@ spec: {
 		]
 	}, {
 		name: "get-metrics-from-prometheus"
-		inputs: parameterrs: [{
+		inputs: parameters: [{
 			name: "jobN"
 		}, {
 			name: "appLabel"
@@ -181,7 +181,7 @@ spec: {
 			gcs: {
 				bucket: "{{ workflow.parameters.gcsBucket }}"
 				// see https://github.com/argoproj/argo-workflows/blob/510b4a816dbb2d33f37510db1fd92b841c4d14d3/docs/workflow-controller-configmap.yaml#L93-L106
-				keyFormat: """
+				key: """
 				metrics
 				/{{ workflow.creationTimestamp.Y }}
 				/{{ workflow.creationTimestamp.m }}
