@@ -344,7 +344,7 @@ def time_range_from_args(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--prometheus-url", 
+    parser.add_argument("--prometheus-url",
                         help="endpoint URL for prometheus server",
                         default="http://localhost:9090")
     parser.add_argument("--start", help="start epoch time", type=int)
@@ -420,10 +420,10 @@ def main():
     result = metrics_as_result(
         container_metrics, pod_metrics,
         node_metrics, throughput_metrics, latency_metrics, {
-        'start': start,
-        'end': end,
-        'step': args.step,
-        'prometheus_url': args.prometheus_url,
+            'start': start,
+            'end': end,
+            'step': args.step,
+            'prometheus_url': args.prometheus_url,
     })
 
     print(json.dumps(result, default=support_set_default))
