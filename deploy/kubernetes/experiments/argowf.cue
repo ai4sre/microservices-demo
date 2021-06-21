@@ -133,6 +133,13 @@ spec: {
 				value: "{{inputs.parameters.appLabel}}"
 			}]
 		}, {
+			name:     "get-metrics"
+			template: "get-metrics-from-prometheus"
+			arguments: parameters: [{
+				name:  "seconds"
+				value: "{{workflow.parameters.chaosIntervalSec}}"
+			}]
+		}, {
 			name:     "sleep"
 			template: "sleep-n-sec"
 			arguments: parameters: [{
@@ -142,7 +149,7 @@ spec: {
 		}],
 		]
 	}, {
-		name: "get-metrics"
+		name: "get-metrics-from-prometheus"
 		container: {
 			image: "ghcr.io/ai4sre/metrics-tools:latest"
 			imagePullPolicy: "always"
