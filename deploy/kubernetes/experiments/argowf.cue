@@ -192,7 +192,7 @@ spec: {
 						engineState:     "active"
 						monitoring:      true
 						appinfo: {
-							appns: "sock-shop"
+							appns: "{{workflow.parameters.appNamespace}}"
 							appLabel: "name={{input.parameters.appLabel}}"
 							appkind:  "deployment"
 						}
