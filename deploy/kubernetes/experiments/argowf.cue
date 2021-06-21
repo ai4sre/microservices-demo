@@ -154,8 +154,8 @@ spec: {
 			image: "ghcr.io/ai4sre/metrics-tools:latest"
 			imagePullPolicy: "Always"
 			args: [
-				"--prometheus-url", "http://prometheus:9090",
-				"--grafana-url", "http://grafana:3000",
+				"--prometheus-url", "http://prometheus.monitoring.svc.cluster.local:9090",
+				"--grafana-url", "http://grafana.monitoring.svc.cluster.local:3000",
 			]
 		}
 	}, {
