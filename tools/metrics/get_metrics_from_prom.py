@@ -425,7 +425,8 @@ def main():
             'step': args.step,
             'prometheus_url': args.prometheus_url,
             'grafana_url': args.grafana_url,
-    })
+        }
+    )
 
     print(json.dumps(result, default=support_set_default))
 
