@@ -78,7 +78,7 @@ def request_query_range(url, params, target):
     try:
         # see https://prometheus.io/docs/prometheus/latest/querying/api/#range-queries
         req = urllib.request.Request(url=url+'/api/v1/query_range',
-            data=bparams, headers=headers)
+                                     data=bparams, headers=headers)
         with urllib.request.urlopen(req) as res:
             body = json.load(res)
             metrics = body['data']['result']
