@@ -2,7 +2,6 @@ import "encoding/yaml"
 import "encoding/json"
 import "strings"
 
-#chaosTypes: ["pod-cpu-hog", "pod-network-loss"]
 #appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
 #container: {
@@ -19,6 +18,19 @@ import "strings"
 		}, {
 			name:  "CPU_CORES"
 			value: "2"
+		}, {
+			name:  "TOTAL_CHAOS_DURATION"
+			value: "{{workflow.parameters.chaosDurationSec}}"
+		}]
+	}]
+	"pod-memory-hog": [{
+		name: "pod-memory-hog"
+		spec: components: env: [{
+			name:  "TARGET_CONTAINER"
+			value: "{{inputs.parameters.appLabel}}"
+		}, {
+			name:  "MEMORY_CONSUMPTION"
+			value: "500" // 500MB
 		}, {
 			name:  "TOTAL_CHAOS_DURATION"
 			value: "{{workflow.parameters.chaosDurationSec}}"
@@ -78,7 +90,7 @@ spec: {
 		value: 1800 // 30min
 	}, {
 		name: "chaosTypes"
-		value: strings.Join(#chaosTypes, ",")
+		value: strings.Join([for type, _ in #chaosTypeToExps { "'" + type + "'" }], ",")
 	}, {
 		name: "gcsBucket"
 		value: "microservices-demo-artifacts"
@@ -86,7 +98,7 @@ spec: {
 	parallelism: 1
 	templates: [{
 		name: "argowf-chaos"
-		steps: [ [ for type in #chaosTypes {
+		steps: [ [ for type, _ in #chaosTypeToExps {
 			name:     "run-chaos-\( type )"
 			template: "expand-chaos-\( type )"
 			arguments: parameters: [{
@@ -97,8 +109,11 @@ spec: {
 				value: "{{item}}"
 			}]
 			withParam: "{{workflow.parameters.appLabels}}"
+			// append 'dummy' because of list in argo should be >=2
+			// see https://github.com/argoproj/argo-workflows/issues/1633#issuecomment-645433742
+			when: "'\( type )' in ({{workflow.parameters.chaosTypes}},'dummy')"
 		},] ]
-	}, for type in #chaosTypes {
+	}, for type, v in #chaosTypeToExps {
 		name: "expand-chaos-\( type )"
 		inputs: parameters: [{
 			name: "repeatNum"
@@ -118,7 +133,7 @@ spec: {
 			withSequence: count: "{{inputs.parameters.repeatNum}}"
 		}],
 		]
-	}, for type in #chaosTypes {
+	}, for type, _ in #chaosTypeToExps {
 		name: "run-chaos-\( type )-with-sleep"
 		inputs: parameters: [{
 			name: "jobN"
