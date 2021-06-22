@@ -10,7 +10,7 @@ exp/run:
 # for checking the manifest of argo workflow
 .PHONY: exp/run-trial
 exp/run-trial:
-	$(CUE_EXPORT) | $(ARGO_SUBMIT) --watch - --parameter-file experiments/argowf-checking-params.yaml || exit 1
+	$(CUE_EXPORT) | $(ARGO_SUBMIT) --watch - --parameter-file experiments/argowf-trial.params.yaml || exit 1
 	argo delete @latest
 
 .PHONY: exp/print-yaml
