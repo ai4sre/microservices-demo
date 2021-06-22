@@ -351,6 +351,7 @@ def main():
     parser.add_argument("--end", help="end epoch time", type=int)
     parser.add_argument("--step", help="step seconds", type=int, default=STEP)
     parser.add_argument("--duration", help="", type=str, default="30m")
+    parser.add_argument("--out", help="output path", type=str)
     args = parser.parse_args()
 
     try:
@@ -428,7 +429,12 @@ def main():
         }
     )
 
-    print(json.dumps(result, default=support_set_default))
+    data = json.dumps(result, default=support_set_default)
+    if args.out is None:
+        print(data)
+    else:
+        with open(args.out, mode='w') as f:
+            f.write(data)
 
 
 if __name__ == '__main__':

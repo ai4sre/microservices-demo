@@ -79,6 +79,9 @@ spec: {
 	}, {
 		name: "chaosTypes"
 		value: strings.Join(#chaosTypes, ",")
+	}, {
+		name: "gcsBucket"
+		value: "microservices-demo-artifacts"
 	}]
 	parallelism: 1
 	templates: [{
@@ -136,8 +139,14 @@ spec: {
 			name:     "get-metrics"
 			template: "get-metrics-from-prometheus"
 			arguments: parameters: [{
-				name:  "seconds"
-				value: "{{workflow.parameters.chaosIntervalSec}}"
+				name:  "jobN"
+				value: "{{inputs.parameters.jobN}}"
+			}, {
+				name: "appLabel"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name: "chaosType"
+				value: "\( type )"
 			}]
 		}, {
 			name:     "sleep"
@@ -150,14 +159,33 @@ spec: {
 		]
 	}, {
 		name: "get-metrics-from-prometheus"
+		inputs: parameters: [{
+			name: "jobN"
+		}, {
+			name: "appLabel"
+		}, {
+			name: "chaosType"
+		}]
 		container: {
 			image: "ghcr.io/ai4sre/metrics-tools:latest"
 			imagePullPolicy: "Always"
 			args: [
 				"--prometheus-url", "http://prometheus.monitoring.svc.cluster.local:9090",
 				"--grafana-url", "http://grafana.monitoring.svc.cluster.local:3000",
+				"--out", "/tmp/metrics.json",
 			]
 		}
+		outputs: artifacts: [{
+			name: "metrics-artifacts"
+			path: "/tmp/metrics.json"
+			gcs: {
+				bucket: "{{ workflow.parameters.gcsBucket }}"
+				// see https://github.com/argoproj/argo-workflows/blob/510b4a816dbb2d33f37510db1fd92b841c4d14d3/docs/workflow-controller-configmap.yaml#L93-L106
+				key: """
+				metrics/{{ workflow.creationTimestamp.Y }}/{{ workflow.creationTimestamp.m }}/{{ workflow.creationTimestamp.d }}/{{ workflow.name }}/{{ inputs.parameters.appLabel }}_{{ inputs.parameters.chaosType }}_{{ inputs.parameters.jobN }}.gz
+				"""
+			}
+		}]
 	}, {
 		name: "sleep-n-sec"
 		inputs: parameters: [{

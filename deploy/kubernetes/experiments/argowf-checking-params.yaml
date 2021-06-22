@@ -6,3 +6,4 @@ appLabels:
   - user-db
   - shipping
   - orders-db
+gcsBucket: microservices-experiment-artifacts-test
