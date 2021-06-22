@@ -7,8 +7,9 @@ exp/run:
 	$(CUE_EXPORT) | $(ARGO_SUBMIT) --watch -
 	echo "If you cleanup your experiment, run 'argo delete @latest'"
 
-.PHONY: exp/run-for-checking
-exp/run-for-checking:
+# for checking the manifest of argo workflow
+.PHONY: exp/run-trial
+exp/run-trial:
 	$(CUE_EXPORT) | $(ARGO_SUBMIT) --watch - --parameter-file experiments/argowf-checking-params.yaml || exit 1
 	argo delete @latest
 
