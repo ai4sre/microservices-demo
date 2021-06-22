@@ -182,7 +182,7 @@ spec: {
 				bucket: "{{ workflow.parameters.gcsBucket }}"
 				// see https://github.com/argoproj/argo-workflows/blob/510b4a816dbb2d33f37510db1fd92b841c4d14d3/docs/workflow-controller-configmap.yaml#L93-L106
 				key: """
-				metrics/{{ workflow.creationTimestamp.Y }}/{{ workflow.creationTimestamp.m }}/{{ workflow.creationTimestamp.d }}/{{ workflow.name }}/{{ inputs.parameters.appLabel }}_{{ inputs.parameters.chaosType }}_{{ inputs.parameters.jobN }}
+				metrics/{{ workflow.creationTimestamp.Y }}/{{ workflow.creationTimestamp.m }}/{{ workflow.creationTimestamp.d }}/{{ workflow.name }}/{{ inputs.parameters.appLabel }}_{{ inputs.parameters.chaosType }}_{{ inputs.parameters.jobN }}.gz
 				"""
 			}
 		}]
