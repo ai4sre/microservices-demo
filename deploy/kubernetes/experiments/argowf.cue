@@ -221,7 +221,7 @@ spec: {
 						monitoring:      true
 						appinfo: {
 							appns: "{{workflow.parameters.appNamespace}}"
-							appLabel: "name={{input.parameters.appLabel}}"
+							applabel: "name={{inputs.parameters.appLabel}}"
 							appkind:  "deployment"
 						}
 						chaosServiceAccount: "{{workflow.parameters.chaosServiceAccount}}"
