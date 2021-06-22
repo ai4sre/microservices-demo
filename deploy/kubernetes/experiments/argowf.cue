@@ -2,7 +2,6 @@ import "encoding/yaml"
 import "encoding/json"
 import "strings"
 
-#chaosTypes: ["pod-cpu-hog", "pod-memory-hog", "pod-network-loss"]
 #appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
 #container: {
@@ -91,7 +90,7 @@ spec: {
 		value: 1800 // 30min
 	}, {
 		name: "chaosTypes"
-		value: strings.Join(#chaosTypes, ",")
+		value: strings.Join([for type, _ in #chaosTypeToExps { "'" + type + "'" }], ",")
 	}, {
 		name: "gcsBucket"
 		value: "microservices-demo-artifacts"
