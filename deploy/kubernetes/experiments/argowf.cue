@@ -25,7 +25,7 @@ import "strings"
 		}]
 	}]
 	"pod-memory-hog": [{
-		name: "pod-cpu-hog"
+		name: "pod-memory-hog"
 		spec: components: env: [{
 			name:  "TARGET_CONTAINER"
 			value: "{{inputs.parameters.appLabel}}"
@@ -99,7 +99,7 @@ spec: {
 	parallelism: 1
 	templates: [{
 		name: "argowf-chaos"
-		steps: [ [ for type in #chaosTypes {
+		steps: [ [ for type, _ in #chaosTypeToExps {
 			name:     "run-chaos-\( type )"
 			template: "expand-chaos-\( type )"
 			arguments: parameters: [{
@@ -110,8 +110,11 @@ spec: {
 				value: "{{item}}"
 			}]
 			withParam: "{{workflow.parameters.appLabels}}"
+			// append 'dummy' because of list in argo should be >=2
+			// see https://github.com/argoproj/argo-workflows/issues/1633#issuecomment-645433742
+			when: "'\( type )' in ({{workflow.parameters.chaosTypes}},'dummy')"
 		},] ]
-	}, for type in #chaosTypes {
+	}, for type, v in #chaosTypeToExps {
 		name: "expand-chaos-\( type )"
 		inputs: parameters: [{
 			name: "repeatNum"
@@ -131,7 +134,7 @@ spec: {
 			withSequence: count: "{{inputs.parameters.repeatNum}}"
 		}],
 		]
-	}, for type in #chaosTypes {
+	}, for type, _ in #chaosTypeToExps {
 		name: "run-chaos-\( type )-with-sleep"
 		inputs: parameters: [{
 			name: "jobN"
