@@ -2,7 +2,7 @@ import "encoding/yaml"
 import "encoding/json"
 import "strings"
 
-#chaosTypes: ["pod-cpu-hog", "pod-network-loss"]
+#chaosTypes: ["pod-cpu-hog", "pod-memory-hog", "pod-network-loss"]
 #appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
 #container: {
@@ -19,6 +19,19 @@ import "strings"
 		}, {
 			name:  "CPU_CORES"
 			value: "2"
+		}, {
+			name:  "TOTAL_CHAOS_DURATION"
+			value: "{{workflow.parameters.chaosDurationSec}}"
+		}]
+	}]
+	"pod-memory-hog": [{
+		name: "pod-cpu-hog"
+		spec: components: env: [{
+			name:  "TARGET_CONTAINER"
+			value: "{{inputs.parameters.appLabel}}"
+		}, {
+			name:  "MEMORY_CONSUMPTION"
+			value: "500" // 500MB
 		}, {
 			name:  "TOTAL_CHAOS_DURATION"
 			value: "{{workflow.parameters.chaosDurationSec}}"
