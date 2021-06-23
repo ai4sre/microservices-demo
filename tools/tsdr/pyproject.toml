@@ -1,16 +1,12 @@
 [tool.poetry]
-name = "causal-discovery"
+name = "tsdr"
 version = "0.1.0"
 description = ""
-authors = ["tsurubee"]
+authors = ["tsurubee","yuuk1"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 numpy = "^1.19.0"
-jupyterlab = "^2.2.0"
-matplotlib = "^3.3.0"
-pgmpy = "^0.1.11"
-pcalg = "^0.1.9"
 scipy = "^1.5.2"
 fastdtw = "^0.3.4"
 sklearn = "^0.0"
