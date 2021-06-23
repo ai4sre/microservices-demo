@@ -10,6 +10,8 @@ numpy = "^1.19.0"
 scipy = "^1.5.2"
 fastdtw = "^0.3.4"
 sklearn = "^0.0"
+pandas = "^1.2.5"
+statsmodels = "^0.12.2"
 
 [tool.poetry.dev-dependencies]
 
