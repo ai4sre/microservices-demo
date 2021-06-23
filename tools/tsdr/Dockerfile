@@ -13,9 +13,5 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /usr/src/app
 
 COPY --from=builder /usr/src/app/requirements.txt .
-
 RUN pip install -r requirements.txt
-
 COPY . .
-
-ENTRYPOINT ["tsifter.py"]
