@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  tsifter:
+    build: .
+    volumes:
+      - ./:/usr/src/app
+    entrypoint: ["/usr/src/app/tsifter.py"]
+  sieve:
+    build: .
+    working_dir: "/usr/src/app"
+    volumes:
+      - ./:/usr/src/app
+    entrypoint: ["/usr/src/app/sieve.py"]
