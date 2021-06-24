@@ -11,22 +11,23 @@ os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
-import sys
 import json
-import time
-from datetime import datetime
-import pandas as pd
-import numpy as np
-import re
 import random
-from util import util
-from pprint import pprint
-from scipy.cluster.hierarchy import linkage
-from scipy.cluster.hierarchy import fcluster
-from scipy.spatial.distance import pdist, squareform
-from clustering.sbd import sbd
-from statsmodels.tsa.stattools import adfuller
+import re
+import sys
+import time
 from concurrent import futures
+from datetime import datetime
+from pprint import pprint
+
+import numpy as np
+import pandas as pd
+from scipy.cluster.hierarchy import fcluster, linkage
+from scipy.spatial.distance import pdist, squareform
+from statsmodels.tsa.stattools import adfuller
+
+from clustering.sbd import sbd
+from util import util
 
 ## Parameters ###################################################
 TARGET_DATA = {"containers": "all",
@@ -84,6 +85,8 @@ if __name__ == '__main__':
     parser.add_argument("--max-workers", help="number of processes", type=int, default=1)
     parser.add_argument("--plot-num", help="number of plots", type=int, default=PLOTS_NUM)
     parser.add_argument("--metric-num", help="number of metrics (for experiment)", type=int, default=None)
+    parser.add_argument("--out", help="file path for output", type=str)
+    parser.add_argument("--results-dir", help="output directory", type=bool)
     args = parser.parse_args()
 
     DATA_FILE = args.datafile
@@ -199,11 +202,18 @@ if __name__ == '__main__':
     summary["metrics_dimension"] = metrics_dimension
     summary["reduced_metrics"] = list(reduced_df.columns)
     summary["clustering_info"] = clustering_info
-    file_name = "tsifter_{}.json".format(datetime.now().strftime("%Y%m%d%H%M%S"))
-    result_dir = "./results/{}".format(DATA_FILE.split("/")[-1])
-    if not os.path.isdir(result_dir):
-        os.makedirs(result_dir)
-    with open(os.path.join(result_dir, file_name), "w") as f:
-        json.dump(summary, f, indent=4)
-    # print stdout, too.
-    json.dump(summary, sys.stdout, indent=4)
+
+    if args.resutls.dir:
+        file_name = "tsifter_{}.json".format(datetime.now().strftime("%Y%m%d%H%M%S"))
+        result_dir = "./results/{}".format(DATA_FILE.split("/")[-1])
+        if not os.path.isdir(result_dir):
+            os.makedirs(result_dir)
+        with open(os.path.join(result_dir, file_name), "w") as f:
+            json.dump(summary, f, indent=4)
+
+    # print out, too.
+    if args.out is None:
+        json.dump(summary, sys.stdout)
+    else:
+        with open(args.out, mode='w') as f:
+            json.dump(summary, f)
