@@ -121,6 +121,7 @@ def kshape_clustering(target_df, service_name, executor):
 
     return clustering_info, remove_list
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("datafile", help="metrics JSON data file")
@@ -228,7 +229,6 @@ if __name__ == '__main__':
     time_clustering = round(time.time() - start, 2)
     metrics_dimension = util.count_metrics(metrics_dimension, reduced_df, 2)
     metrics_dimension["total"].append(len(reduced_df.columns))
-    #pprint(metrics_dimension)
 
     # Output summary of results as JSON file
     summary = {}
