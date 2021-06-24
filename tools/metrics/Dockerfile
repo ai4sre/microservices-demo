@@ -1,7 +1,9 @@
-FROM python:3.9
+FROM python:3.9-slim
 
-RUN mkdir /work
-COPY ./ /work
-WORKDIR /work
+ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["/work/get_metrics_from_prom.py"]
+WORKDIR /usr/src/app
+
+COPY . .
+
+ENTRYPOINT ["/usr/src/app/get_metrics_from_prom.py"]
