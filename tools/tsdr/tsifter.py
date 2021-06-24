@@ -79,6 +79,7 @@ def hierarchical_clustering(target_df, dist_func):
                     clustering_info[target_df.columns[medoid]].append(target_df.columns[r])
     return clustering_info, remove_list
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("datafile", help="metrics JSON data file")
@@ -110,7 +111,7 @@ if __name__ == '__main__':
                     if target_name in ["queue-master", "rabbitmq", "session-db"]:
                         continue
                     column_name = "{}-{}_{}".format(target[0], target_name, metric_name)
-                    data_df[column_name] = np.array(metric["values"], dtype=np.float)[:, 1][-PLOTS_NUM:]
+                    data_df[column_name] = np.array(metric["values"], dtype=np.float64)[:, 1][-PLOTS_NUM:]
     data_df = data_df.round(4)
     data_df = data_df.interpolate(method="spline", order=3, limit_direction="both")
 
@@ -192,7 +193,6 @@ if __name__ == '__main__':
     time_clustering = round(time.time() - start, 2)
     metrics_dimension = util.count_metrics(metrics_dimension, reduced_df, 2)
     metrics_dimension["total"].append(len(reduced_df.columns))
-    #pprint(metrics_dimension)
 
     # Output summary of results as JSON file
     summary = {}
