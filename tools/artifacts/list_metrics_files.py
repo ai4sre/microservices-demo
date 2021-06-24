@@ -10,13 +10,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--gcs-bucket-name",
                         help="", required=True)
-    parser.add_argument("--gcs-bucket-prefix",
+    parser.add_argument("--gcs-blob-prefix",
                         help="", required=True)
     args = parser.parse_args()
 
     sc = storage.Client()
     blobs = sc.list_blobs(args.gcs_bucket_name,
-                          prefix=args.gcs_bucket_prefix)
+                          prefix=args.gcs_blob_prefix)
 
     print(json.dumps([blob.name for blob in blobs]))
 
