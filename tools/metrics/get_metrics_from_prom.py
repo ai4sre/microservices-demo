@@ -44,16 +44,17 @@ import urllib.request
 COMPONENT_LABELS = {
     "front-end", "orders", "orders-db", "carts", "carts-db",
     "shipping", "user", "user-db", "payment", "catalogue", "catalogue-db",
-    "queue-master", "rabbitmq",
+    "queue-master", "rabbitmq", "session-db",
 }
+APP_LABEL = "sock-shop"
 STEP = 5
 NAN = 'nan'
 GRAFANA_DASHBOARD = "d/3cHU4RSMk/sock-shop-performance"
 
 
-def get_targets(url, job):
+def get_targets(url, selector):
     params = {
-        "match_target": '{{job=~"{}"}}'.format(job),
+        "match_target": '{' + selector + '}',
     }
     req = urllib.request.Request('{}{}?{}'.format(
         url, "/api/v1/targets/metadata",
@@ -237,7 +238,7 @@ def metrics_as_result(container_metrics, pod_metrics, node_metrics,
     for metric in pod_metrics:
         if '__name__' not in metric['metric']:
             continue
-        container = metric['metric']['job'].split('/')[1]
+        container = metric['metric']['job']
         data['middlewares'].setdefault(container, [])
         values = interpotate_time_series(metric['values'], time_meta)
         m = {
@@ -365,21 +366,22 @@ def main():
         exit(-1)
 
     # get container metrics (cAdvisor)
-    container_targets = get_targets(args.prometheus_url, "kubernetes-cadvisor")
+    container_targets = get_targets(args.prometheus_url,
+                                    'job=~"kubernetes-cadvisor"')
     container_selector = 'namespace="sock-shop",container=~"{}|POD"'.format(
-        '|'.join(COMPONENT_LABELS))
+                         '|'.join(COMPONENT_LABELS))
     container_metrics = get_metrics(args.prometheus_url, container_targets,
                                     start, end, args.step, container_selector)
 
     # get pod metrics
-    pod_targets = get_targets(args.prometheus_url, "sock-shop/.*")
-    pod_selector = 'job=~"sock-shop/.*"'
+    pod_selector = 'app="{}"'.format(APP_LABEL)
+    pod_targets = get_targets(args.prometheus_url, pod_selector)
     pod_metrics = get_metrics(args.prometheus_url, pod_targets,
                               start, end, args.step, pod_selector)
 
     # get node metrics (node-exporter)
-    node_targets = get_targets(args.prometheus_url, "monitoring/")
     node_selector = 'job="monitoring/"'
+    node_targets = get_targets(args.prometheus_url, node_selector)
     node_metrics = get_metrics(args.prometheus_url, node_targets,
                                start, end, args.step, node_selector)
 
