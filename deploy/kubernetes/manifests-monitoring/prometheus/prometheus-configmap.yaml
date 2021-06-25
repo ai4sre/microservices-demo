@@ -96,8 +96,10 @@ data:
       - source_labels:
           - __meta_kubernetes_namespace
           - __meta_kubernetes_pod_label_name
+          - __meta_kubernetes_pod_label_app
         separator: /
         target_label: job
       - source_labels:
           - __meta_kubernetes_pod_node_name
+          - __meta_kubernetes_pod_label_app
         target_label: node
