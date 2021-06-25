@@ -5,6 +5,7 @@ metadata:
   name: carts
   labels:
     name: carts
+    app: sock-shop
   namespace: sock-shop
 spec:
   ports:
@@ -13,3 +14,4 @@ spec:
     targetPort: 80
   selector:
     name: carts
+    app: sock-shop

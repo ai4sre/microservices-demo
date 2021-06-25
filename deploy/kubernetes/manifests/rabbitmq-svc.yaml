@@ -5,6 +5,7 @@ metadata:
   name: rabbitmq
   labels:
     name: rabbitmq
+    app: sock-shop
   namespace: sock-shop
 spec:
   ports:
@@ -18,3 +19,4 @@ spec:
     protocol: TCP
   selector:
     name: rabbitmq
+    app: sock-shop

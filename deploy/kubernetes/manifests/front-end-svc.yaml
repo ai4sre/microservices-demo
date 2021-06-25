@@ -5,6 +5,7 @@ metadata:
   name: front-end
   labels:
     name: front-end
+    app: sock-shop
   namespace: sock-shop
 spec:
   type: LoadBalancer
@@ -14,3 +15,4 @@ spec:
     nodePort: 30001
   selector:
     name: front-end
+    app: sock-shop
