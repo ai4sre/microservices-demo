@@ -87,7 +87,7 @@ if __name__ == '__main__':
     parser.add_argument("--plot-num", help="number of plots", type=int, default=PLOTS_NUM)
     parser.add_argument("--metric-num", help="number of metrics (for experiment)", type=int, default=None)
     parser.add_argument("--out", help="file path for output", type=str)
-    parser.add_argument("--results-dir", help="output directory", type=bool)
+    parser.add_argument("--results-dir", help="output directory", type=bool, default=False)
     args = parser.parse_args()
 
     DATA_FILE = args.datafile
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     summary["reduced_metrics"] = list(reduced_df.columns)
     summary["clustering_info"] = clustering_info
 
-    if args.resutls.dir:
+    if args.results_dir:
         file_name = "tsifter_{}.json".format(datetime.now().strftime("%Y%m%d%H%M%S"))
         result_dir = "./results/{}".format(DATA_FILE.split("/")[-1])
         if not os.path.isdir(result_dir):
