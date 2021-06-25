@@ -368,7 +368,9 @@ def main():
     # get container metrics (cAdvisor)
     container_targets = get_targets(args.prometheus_url,
                                     'job=~"kubernetes-cadvisor"')
-    container_selector = 'namespace="sock-shop",container=~"{}|POD"'.format(
+    # add container=POD for network metrics
+    # exclude metrics of argo workflow pods by removing metrics that 'instance' is gke control-pool node.
+    container_selector = 'namespace="sock-shop",container=~"{}|POD",instance!~"gke-microservices-experi-control-pool-.+"'.format(
                          '|'.join(COMPONENT_LABELS))
     container_metrics = get_metrics(args.prometheus_url, container_targets,
                                     start, end, args.step, container_selector)
