@@ -5,6 +5,7 @@ metadata:
   name: user
   labels:
     name: user
+    app: sock-shop
   namespace: sock-shop
 spec:
   ports:
@@ -13,4 +14,4 @@ spec:
     targetPort: 80
   selector:
     name: user
-
+    app: sock-shop

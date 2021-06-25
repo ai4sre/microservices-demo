@@ -5,6 +5,7 @@ metadata:
   name: payment
   labels:
     name: payment
+    app: sock-shop
   annotations:
     litmuschaos.io/chaos: "true"
   namespace: sock-shop
@@ -13,10 +14,12 @@ spec:
   selector:
     matchLabels:
       name: payment
+      app: sock-shop
   template:
     metadata:
       labels:
         name: payment
+        app: sock-shop
     spec:
       containers:
       - name: payment

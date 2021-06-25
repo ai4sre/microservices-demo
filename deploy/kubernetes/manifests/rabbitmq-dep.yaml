@@ -5,6 +5,7 @@ metadata:
   name: rabbitmq
   labels:
     name: rabbitmq
+    app: sock-shop
   annotations:
     litmuschaos.io/chaos: "true"
   namespace: sock-shop
@@ -13,10 +14,12 @@ spec:
   selector:
     matchLabels:
       name: rabbitmq
+      app: sock-shop
   template:
     metadata:
       labels:
         name: rabbitmq
+        app: sock-shop
       annotations:
         prometheus.io/scrape: "false"
     spec:
