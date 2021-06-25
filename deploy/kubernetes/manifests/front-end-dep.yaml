@@ -5,6 +5,7 @@ metadata:
   name: front-end
   labels:
     name: front-end
+    app: sock-shop
   annotations:
     litmuschaos.io/chaos: "true"
   namespace: sock-shop
@@ -13,10 +14,12 @@ spec:
   selector:
     matchLabels:
       name: front-end
+      app: sock-shop
   template:
     metadata:
       labels:
         name: front-end
+        app: sock-shop
     spec:
       containers:
       - name: front-end

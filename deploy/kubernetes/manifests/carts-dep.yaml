@@ -5,6 +5,7 @@ metadata:
   name: carts
   labels:
     name: carts
+    app: sock-shop
   annotations:
     litmuschaos.io/chaos: "true"
   namespace: sock-shop
@@ -13,10 +14,12 @@ spec:
   selector:
     matchLabels:
       name: carts
+      app: sock-shop
   template:
     metadata:
       labels:
         name: carts
+        app: sock-shop
     spec:
       containers:
       - name: carts

@@ -5,6 +5,7 @@ metadata:
   name: carts-db
   labels:
     name: carts-db
+    app: sock-shop
   namespace: sock-shop
   annotations:
     litmuschaos.io/chaos: "true"
@@ -13,10 +14,12 @@ spec:
   selector:
     matchLabels:
       name: carts-db
+      app: sock-shop
   template:
     metadata:
       labels:
         name: carts-db
+        app: sock-shop
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9216"

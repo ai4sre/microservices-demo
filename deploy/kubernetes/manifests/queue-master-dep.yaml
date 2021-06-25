@@ -5,6 +5,7 @@ metadata:
   name: queue-master
   labels:
     name: queue-master
+    app: sock-shop
   annotations:
     litmuschaos.io/chaos: "true"
   namespace: sock-shop
@@ -13,10 +14,12 @@ spec:
   selector:
     matchLabels:
       name: queue-master
+      app: sock-shop
   template:
     metadata:
       labels:
         name: queue-master
+        app: sock-shop
     spec:
       containers:
       - name: queue-master

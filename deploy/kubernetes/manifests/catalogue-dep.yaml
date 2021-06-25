@@ -5,6 +5,7 @@ metadata:
   name: catalogue
   labels:
     name: catalogue
+    app: sock-shop
   annotations:
     litmuschaos.io/chaos: "true"
   namespace: sock-shop
@@ -13,10 +14,12 @@ spec:
   selector:
     matchLabels:
       name: catalogue
+      app: sock-shop
   template:
     metadata:
       labels:
         name: catalogue
+        app: sock-shop
     spec:
       containers:
       - name: catalogue

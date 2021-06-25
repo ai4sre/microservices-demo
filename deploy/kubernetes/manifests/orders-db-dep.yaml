@@ -5,6 +5,7 @@ metadata:
   name: orders-db
   labels:
     name: orders-db
+    app: sock-shop
   annotations:
     litmuschaos.io/chaos: "true"
   namespace: sock-shop
@@ -13,10 +14,12 @@ spec:
   selector:
     matchLabels:
       name: orders-db
+      app: sock-shop
   template:
     metadata:
       labels:
         name: orders-db
+        app: sock-shop
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9216"
