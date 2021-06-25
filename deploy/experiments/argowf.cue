@@ -185,19 +185,22 @@ spec: {
 			image: "ghcr.io/ai4sre/metrics-tools:latest"
 			imagePullPolicy: "Always"
 			args: [
-				"--prometheus-url", "http://prometheus.monitoring.svc.cluster.local:9090",
-				"--grafana-url", "http://grafana.monitoring.svc.cluster.local:3000",
-				"--out", "/tmp/metrics.json",
+				"--prometheus-url",
+				"http://prometheus.monitoring.svc.cluster.local:9090",
+				"--grafana-url",
+				"http://grafana.monitoring.svc.cluster.local:3000",
+				"--out",
+				"/tmp/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}-{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json",
 			]
 		}
 		outputs: artifacts: [{
 			name: "metrics-artifacts"
-			path: "/tmp/metrics.json"
+			path: "/tmp/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}-{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json"
 			gcs: {
 				bucket: "{{ workflow.parameters.gcsBucket }}"
 				// see https://github.com/argoproj/argo-workflows/blob/510b4a816dbb2d33f37510db1fd92b841c4d14d3/docs/workflow-controller-configmap.yaml#L93-L106
 				key: """
-				metrics/{{ workflow.creationTimestamp.Y }}/{{ workflow.creationTimestamp.m }}/{{ workflow.creationTimestamp.d }}/{{ workflow.name }}/{{ inputs.parameters.appLabel }}_{{ inputs.parameters.chaosType }}_{{ inputs.parameters.jobN }}.gz
+				metrics/{{workflow.creationTimestamp.Y}}/{{workflow.creationTimestamp.m}}/{{workflow.creationTimestamp.d}}/{{workflow.name}}/{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json.tgz
 				"""
 			}
 		}]
