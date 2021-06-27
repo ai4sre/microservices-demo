@@ -4,7 +4,7 @@ import argparse
 import json
 import sys
 
-STEP = 5
+STEP = 15
 POINT_NUM = 361
 
 def log(msg):

@@ -47,7 +47,7 @@ COMPONENT_LABELS = {
     "queue-master", "rabbitmq", "session-db",
 }
 APP_LABEL = "sock-shop"
-STEP = 5
+STEP = 15
 NAN = 'nan'
 GRAFANA_DASHBOARD = "d/3cHU4RSMk/sock-shop-performance"
 
