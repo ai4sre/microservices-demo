@@ -94,6 +94,9 @@ spec: {
 	}, {
 		name: "gcsBucket"
 		value: "microservices-demo-artifacts"
+	}, {
+		name: "litmusJobCleanupPolicy"
+		value: "delete" // defaut value in litmus
 	}]
 	parallelism: 1
 	templates: [{
@@ -243,7 +246,7 @@ spec: {
 							appkind:  "deployment"
 						}
 						chaosServiceAccount: "{{workflow.parameters.chaosServiceAccount}}"
-						jobCleanUpPolicy:    "delete"
+						jobCleanUpPolicy:    "{{workflow.parameters.litmusJobCleanupPolicy}}"
 						experiments: exps
 					}
 				}
