@@ -7,7 +7,7 @@ import "strings"
 #container: {
 	image: "lachlanevenson/k8s-kubectl"
 	command: ["sh", "-c"]
-	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
+	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
 }
 #chaosTypeToExps: {
 	"pod-cpu-hog": [{
