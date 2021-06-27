@@ -7,7 +7,7 @@ import "strings"
 #container: {
 	image: "lachlanevenson/k8s-kubectl"
 	command: ["sh", "-c"]
-	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.appNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
+	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
 }
 #chaosTypeToExps: {
 	"pod-cpu-hog": [{
@@ -71,7 +71,7 @@ spec: {
 		value: "litmus"
 	}, {
 		name:  "chaosServiceAccount"
-		value: "sock-shop-chaos-engine"
+		value: "litmus-admin"
 	}, {
 		name: "appLabels"
 		value: json.Marshal(_cue_app_labels)
@@ -94,6 +94,9 @@ spec: {
 	}, {
 		name: "gcsBucket"
 		value: "microservices-demo-artifacts"
+	}, {
+		name: "litmusJobCleanupPolicy"
+		value: "delete" // defaut value in litmus
 	}]
 	parallelism: 1
 	templates: [{
@@ -231,7 +234,7 @@ spec: {
 					kind: "ChaosEngine"
 					metadata: {
 						name: "{{inputs.parameters.appLabel}}-chaos-{{inputs.parameters.jobN}}"
-						namespace: "{{workflow.parameters.appNamespace}}"
+						namespace: "{{workflow.parameters.adminModeNamespace}}"
 					}
 					spec: {
 						annotationCheck: "false"
@@ -243,7 +246,7 @@ spec: {
 							appkind:  "deployment"
 						}
 						chaosServiceAccount: "{{workflow.parameters.chaosServiceAccount}}"
-						jobCleanUpPolicy:    "delete"
+						jobCleanUpPolicy:    "{{workflow.parameters.litmusJobCleanupPolicy}}"
 						experiments: exps
 					}
 				}
