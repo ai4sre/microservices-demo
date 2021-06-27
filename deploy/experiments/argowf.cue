@@ -71,7 +71,7 @@ spec: {
 		value: "litmus"
 	}, {
 		name:  "chaosServiceAccount"
-		value: "sock-shop-chaos-engine"
+		value: "litmus-admin"
 	}, {
 		name: "appLabels"
 		value: json.Marshal(_cue_app_labels)
@@ -231,7 +231,7 @@ spec: {
 					kind: "ChaosEngine"
 					metadata: {
 						name: "{{inputs.parameters.appLabel}}-chaos-{{inputs.parameters.jobN}}"
-						namespace: "{{workflow.parameters.appNamespace}}"
+						namespace: "{{workflow.parameters.adminModeNamespace}}"
 					}
 					spec: {
 						annotationCheck: "false"
