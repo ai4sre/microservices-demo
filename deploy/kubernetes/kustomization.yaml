@@ -1,5 +1,6 @@
 resources:
 - manifests
+- manifests-loadtest
 - manifests-monitoring
 - manifests-litmus
 - manifests-argo

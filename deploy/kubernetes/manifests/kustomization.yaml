@@ -1,6 +1,7 @@
 namespace: sock-shop
 resources:
 - ./sock-shop-ns.yaml
+- ./litmus-admin-rbac.yaml
 - ./carts-db-dep.yaml
 - ./carts-db-svc.yaml
 - ./carts-dep.yaml
@@ -29,7 +30,3 @@ resources:
 - ./session-db-svc.yaml
 - ./front-end-dep.yaml
 - ./front-end-svc.yaml
----
-namespace: loadtest
-resources:
-- ./loadtest-dep.yaml
