@@ -1,7 +1,6 @@
 namespace: sock-shop
 resources:
 - ./sock-shop-ns.yaml
-- ./litmus-admin-rbac.yaml
 - ./carts-db-dep.yaml
 - ./carts-db-svc.yaml
 - ./carts-dep.yaml
