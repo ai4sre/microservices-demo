@@ -2,8 +2,9 @@ ARGO_MANIFEST_CUE=argowf.cue
 CUE_EXPORT=cue eval --out yaml $(ARGO_MANIFEST_CUE)
 ARGO_ANLYS_MANIFEST_CUE=argowf-analytics.cue
 CUE_ANLYS_EXPORT=cue eval --out yaml $(ARGO_ANLYS_MANIFEST_CUE)
-ARGO_SUBMIT=argo submit -n litmus
-
+ARGO_NAMESPACE=litmus
+ARGO_SUBMIT=argo submit -n $(ARGO_NAMESPACE)
+ARGO_LATEST_DELETE=argo delete -n $(ARGO_NAMESPACE) @latest
 
 .PHONY: run
 run: lint
@@ -14,7 +15,7 @@ run: lint
 .PHONY: run-trial
 run-trial: lint
 	$(CUE_EXPORT) | $(ARGO_SUBMIT) --watch - --parameter-file argowf-trial.params.yaml || exit 1
-	argo delete @latest
+	$(ARGO_LATEST_DELETE)
 
 .PHONY: print-yaml
 print-yaml:
@@ -32,3 +33,11 @@ anlys/run: anlys/lint
 .PHONY: anlys/lint
 anlys/lint:
 	$(CUE_ANLYS_EXPORT) | argo lint --strict --all-kinds -
+
+.PHONY: logs-latest
+logs-latest:
+	argo logs -n $(ARGO_NAMESPACE) -f @latest
+
+.PHONY: delete-latest
+delete-latest:
+	$(ARGO_LATEST_DELETE)
