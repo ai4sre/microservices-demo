@@ -104,7 +104,7 @@ spec: {
 		name: "argowf-chaos"
 		steps: [ [ for type, _ in #chaosTypeToExps {
 			name:     "run-chaos-\( type )"
-			template: "expand-chaos-\( type )"
+			template: "repeat-chaos-\( type )"
 			arguments: parameters: [{
 				name:  "repeatNum"
 				value: "{{workflow.parameters.repeatNum}}"
@@ -118,15 +118,15 @@ spec: {
 			when: "'\( type )' in ({{workflow.parameters.chaosTypes}},'dummy')"
 		},] ]
 	}, for type, v in #chaosTypeToExps {
-		name: "expand-chaos-\( type )"
+		name: "repeat-chaos-\( type )"
 		inputs: parameters: [{
 			name: "repeatNum"
 		}, {
 			name: "appLabel"
 		}]
 		steps: [ [{
-			name:     "expand-chaos-\( type )-step"
-			template: "run-chaos-\( type )-with-sleep"
+			name:     "inject-chaos-\( type )-and-get-metrics"
+			template: "inject-chaos-\( type )-and-get-metrics"
 			arguments: parameters: [{
 				name:  "jobN"
 				value: "{{item}}"
@@ -135,19 +135,25 @@ spec: {
 				value: "{{inputs.parameters.appLabel}}"
 			}]
 			withSequence: count: "{{inputs.parameters.repeatNum}}"
-		}],
-		]
+		}, {
+			name:     "sleep"
+			template: "sleep-n-sec"
+			arguments: parameters: [{
+				name:  "seconds"
+				value: "{{workflow.parameters.chaosIntervalSec}}"
+			}]
+		}] ]
 	}, for type, _ in #chaosTypeToExps {
-		#chaosEngineName: "{{inputs.parameters.appLabel}}-\( type )-{{inputs.parameters.jobN}}"
-		name: "run-chaos-\( type )-with-sleep"
+		#chaosEngineName: "{{inputs.parameters.appLabel}}_\( type )_{{inputs.parameters.jobN}}"
+		name: "inject-chaos-\( type )-and-get-metrics"
 		inputs: parameters: [{
 			name: "jobN"
 		}, {
 			name: "appLabel"
 		}]
 		steps: [ [{
-			name:     "run-chaos-\( type )"
-			template: "run-chaos-\( type )"
+			name:     "inject-chaos-\( type )"
+			template: "inject-chaos-\( type )"
 			arguments: parameters: [{
 				name:  "chaosEngineName"
 				value: #chaosEngineName
@@ -181,13 +187,6 @@ spec: {
 			arguments: parameters: [{
 				name:  "chaosEngineName"
 				value: #chaosEngineName
-			}]
-		}, {
-			name:     "sleep"
-			template: "sleep-n-sec"
-			arguments: parameters: [{
-				name:  "seconds"
-				value: "{{workflow.parameters.chaosIntervalSec}}"
 			}]
 		}],
 		]
@@ -241,7 +240,7 @@ spec: {
 		container: {
 			image: "lachlanevenson/k8s-kubectl"
         	command: ["sh", "-c"]
-        	args: ["kubectl delete chaosengine {{inputs.parameters.chaosEngineName}}  -n {{workflow.parameters.adminModeNamespace}}"]
+        	args: ["kubectl delete chaosengine {{inputs.parameters.chaosEngineName}} -n {{workflow.parameters.adminModeNamespace}}"]
 		}
 	}, {
 		name: "sleep-n-sec"
@@ -254,7 +253,7 @@ spec: {
 			args: ["echo sleeping for {{inputs.parameters.seconds}} seconds; sleep {{inputs.parameters.seconds}}; echo done"]
 		}
 	}, for type, exps in #chaosTypeToExps {
-		name: "run-chaos-\( type )"
+		name: "inject-chaos-\( type )"
 		inputs: {
 			parameters: [{
 				name: "chaosEngineName"
