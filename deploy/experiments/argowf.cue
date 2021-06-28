@@ -9,6 +9,7 @@ import "strings"
 	command: ["sh", "-c"]
 	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
 }
+
 #chaosTypeToExps: {
 	"pod-cpu-hog": [{
 		name: "pod-cpu-hog"
@@ -137,6 +138,7 @@ spec: {
 		}],
 		]
 	}, for type, _ in #chaosTypeToExps {
+		#chaosEngineName: "{{inputs.parameters.appLabel}}-\( type )-{{inputs.parameters.jobN}}"
 		name: "run-chaos-\( type )-with-sleep"
 		inputs: parameters: [{
 			name: "jobN"
@@ -144,11 +146,11 @@ spec: {
 			name: "appLabel"
 		}]
 		steps: [ [{
-			name:     "run-chaos-\( type )-with-sleep-step"
+			name:     "run-chaos-\( type )"
 			template: "run-chaos-\( type )"
 			arguments: parameters: [{
-				name:  "jobN"
-				value: "{{inputs.parameters.jobN}}"
+				name:  "chaosEngineName"
+				value: #chaosEngineName
 			}, {
 				name:  "appLabel"
 				value: "{{inputs.parameters.appLabel}}"
@@ -238,19 +240,19 @@ spec: {
 		name: "run-chaos-\( type )"
 		inputs: {
 			parameters: [{
-				name: "jobN"
+				name: "chaosEngineName"
 			}, {
 				name: "appLabel"
 			}]
 			artifacts: [{
-				name: "run-chaos-\( type )"
+				name: "manifest-for-injecting-\(type)"
 				path: "/tmp/chaosengine.yaml"
 				raw: data: yaml.Marshal(_cue_chaos_engine)
 				_cue_chaos_engine: {
 					apiVersion: "litmuschaos.io/v1alpha1"
 					kind: "ChaosEngine"
 					metadata: {
-						name: "{{inputs.parameters.appLabel}}-chaos-{{inputs.parameters.jobN}}"
+						name: "{{inputs.parameters.chaosEngineName}}"
 						namespace: "{{workflow.parameters.adminModeNamespace}}"
 					}
 					spec: {
