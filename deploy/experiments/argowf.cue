@@ -82,10 +82,10 @@ spec: {
 		value: 3
 	}, {
 		name:  "chaosDurationSec"
-		value: 60
+		value: 300
 	}, {
-		name:  "chaosWaitSec" // should be larger than chaosDurationSec
-		value: 100
+		name:  "chaosWaitSec"
+		value: 240
 	}, {
 		name:  "chaosIntervalSec"
 		value: 1800 // 30min
@@ -144,7 +144,7 @@ spec: {
 			}]
 		}] ]
 	}, for type, _ in #chaosTypeToExps {
-		#chaosEngineName: "{{inputs.parameters.appLabel}}_\( type )_{{inputs.parameters.jobN}}"
+		#chaosEngineName: "{{inputs.parameters.appLabel}}-\( type )-{{inputs.parameters.jobN}}"
 		name: "inject-chaos-\( type )-and-get-metrics"
 		inputs: parameters: [{
 			name: "jobN"
