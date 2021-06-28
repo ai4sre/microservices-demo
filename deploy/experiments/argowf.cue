@@ -49,13 +49,39 @@ import "strings"
 			name: "NETWORK_PACKET_LOSS_PERCENTAGE"
 			value: "60"
 		}, {
-			name: "SOCKET_PATH"
-			value: "/var/run/docker.sock"
+			name:  "TOTAL_CHAOS_DURATION"
+			value: "{{workflow.parameters.chaosDurationSec}}"
+		}]
+	}]
+	"pod-network-latency": [{
+		name: "pod-network-latency"
+		spec: components: env: [{
+			name:  "TARGET_CONTAINER"
+			value: "{{inputs.parameters.appLabel}}"
+		}, {
+			name:  "NETWORK_INTERFACE"
+			value: "eth0"
+		}, {
+			name: "NETWORK_LATENCY"
+			value: "2000"
 		}, {
 			name:  "TOTAL_CHAOS_DURATION"
 			value: "{{workflow.parameters.chaosDurationSec}}"
 		}]
-	}],
+	}]
+	"pod-io-stress": [{
+		name: "pod-io-stress"
+		spec: components: env: [{
+			name:  "TARGET_CONTAINER"
+			value: "{{inputs.parameters.appLabel}}"
+		}, {
+			name:  "FILESYSTEM_UTILIZATION_PERCENTAGE"
+			value: "50"
+		}, {
+			name:  "TOTAL_CHAOS_DURATION"
+			value: "{{workflow.parameters.chaosDurationSec}}"
+		}]
+	}]
 }
 
 apiVersion: "argoproj.io/v1alpha1"
