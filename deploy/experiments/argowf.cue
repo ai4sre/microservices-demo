@@ -10,77 +10,114 @@ import "strings"
 	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
 }
 
+#probe: [{
+	name: "check-front-end-qps"
+	type: "promProbe"
+	"promProbe/inputs": {
+		endpoint: "http://prometheus.monitoring.svc.cluster.local:9090"
+		query: """
+		sum(rate(request_duration_seconds_count{name='front-end',status_code=~'2..',route!='metrics'}[1m])) * 100
+		"""
+		comparator: {
+			criteria: ">="
+			value: "100000" // 10k qps
+		}
+	}
+	mode: "EOT"
+	runProperties: {
+		initialDelaySeconds: 30
+		probeTimeout: 5
+		interval: 30
+		retry: 50
+	}
+}]
+
 #chaosTypeToExps: {
 	"pod-cpu-hog": [{
 		name: "pod-cpu-hog"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "CPU_CORES"
-			value: "2"
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: {
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "CPU_CORES"
+				value: "2"
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+			probe: #probe
+		}
 	}]
 	"pod-memory-hog": [{
 		name: "pod-memory-hog"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "MEMORY_CONSUMPTION"
-			value: "500" // 500MB
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: {
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "MEMORY_CONSUMPTION"
+				value: "500" // 500MB
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+			probe: #probe
+		}
 	}]
 	"pod-network-loss": [{
 		name: "pod-network-loss"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "NETWORK_INTERFACE"
-			value: "eth0"
-		}, {
-			name: "NETWORK_PACKET_LOSS_PERCENTAGE"
-			value: "60"
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: { 
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "NETWORK_INTERFACE"
+				value: "eth0"
+			}, {
+				name: "NETWORK_PACKET_LOSS_PERCENTAGE"
+				value: "60"
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+			probe: #probe
+		}
 	}]
 	"pod-network-latency": [{
 		name: "pod-network-latency"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "NETWORK_INTERFACE"
-			value: "eth0"
-		}, {
-			name: "NETWORK_LATENCY"
-			value: "2000"
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: {
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "NETWORK_INTERFACE"
+				value: "eth0"
+			}, {
+				name: "NETWORK_LATENCY"
+				value: "2000"
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+			probe: #probe
+		}
 	}]
 	"pod-io-stress": [{
 		name: "pod-io-stress"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "FILESYSTEM_UTILIZATION_PERCENTAGE"
-			value: "50"
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: {
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "FILESYSTEM_UTILIZATION_PERCENTAGE"
+				value: "50"
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+		}
+		probe: #probe
 	}]
 }
 
