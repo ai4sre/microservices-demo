@@ -93,6 +93,9 @@ spec: {
 		name: "chaosTypes"
 		value: strings.Join([for type, _ in #chaosTypeToExps { "'" + type + "'" }], ",")
 	}, {
+		name: "restartPod"
+		value: 1
+	}, {
 		name: "gcsBucket"
 		value: "microservices-demo-artifacts"
 	}, {
@@ -181,6 +184,7 @@ spec: {
 				name: "appLabel"
 				value: "{{inputs.parameters.appLabel}}"
 			}]
+			when: "{{workflow.parameters.restartPod}} == 1"
 		}, {
 			name: "revert-chaosengine"
 			template: "revert-chaosengine"
