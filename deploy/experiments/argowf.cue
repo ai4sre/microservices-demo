@@ -167,6 +167,13 @@ spec: {
 				value: "\( type )"
 			}]
 		}, {
+			name: "restart-pod-injected-chaos"
+			template: "restart-pod"
+			arguments: parameters: [{
+				name: "appLabel"
+				value: "{{inputs.parameters.appLabel}}"
+			}]
+		}, {
 			name:     "sleep"
 			template: "sleep-n-sec"
 			arguments: parameters: [{
@@ -207,6 +214,16 @@ spec: {
 				"""
 			}
 		}]
+	}, {
+		name: "restart-pod"
+		inputs: parameters: [{
+			name: "appLabel"
+		}]
+		container: {
+			image: "lachlanevenson/k8s-kubectl"
+			command: ["sh", "-c"]
+			args: ["kubectl rollout restart deployment/{{inputs.parameters.appLabel}} -n {{workflow.parameters.appNamespace}}; echo sleeping for 60 seconds; sleep 60; echo done"]
+		}
 	}, {
 		name: "sleep-n-sec"
 		inputs: parameters: [{
