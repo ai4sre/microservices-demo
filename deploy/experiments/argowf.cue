@@ -176,6 +176,13 @@ spec: {
 				value: "{{inputs.parameters.appLabel}}"
 			}]
 		}, {
+			name: "revert-chaosengine"
+			template: "revert-chaosengine"
+			arguments: parameters: [{
+				name:  "chaosEngineName"
+				value: #chaosEngineName
+			}]
+		}, {
 			name:     "sleep"
 			template: "sleep-n-sec"
 			arguments: parameters: [{
@@ -225,6 +232,16 @@ spec: {
 			image: "lachlanevenson/k8s-kubectl"
 			command: ["sh", "-c"]
 			args: ["kubectl rollout restart deployment/{{inputs.parameters.appLabel}} -n {{workflow.parameters.appNamespace}}; echo sleeping for 60 seconds; sleep 60; echo done"]
+		}
+	}, {
+		name: "revert-chaosengine"
+		inputs: parameters: [{
+			name: "chaosEngineName"
+		}]
+		container: {
+			image: "lachlanevenson/k8s-kubectl"
+        	command: ["sh", "-c"]
+        	args: ["kubectl delete chaosengine {{inputs.parameters.chaosEngineName}}  -n {{workflow.parameters.adminModeNamespace}}"]
 		}
 	}, {
 		name: "sleep-n-sec"
