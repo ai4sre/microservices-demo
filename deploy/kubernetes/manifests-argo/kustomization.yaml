@@ -1,4 +1,0 @@
-namespace: argo
-resources:
-- argo-ns.yaml
-- argo.yaml
