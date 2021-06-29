@@ -1,9 +1,26 @@
 repositories:
   - name: litmuschaos
     url: https://litmuschaos.github.io/litmus-helm/
+  - name: argoproj
+    url: https://argoproj.github.io/argo-helm
 
 releases:
   - name: chaos
     namespace: litmus
     chart: litmuschaos/litmus
     version: ~1.15.0
+  - name: argo-workflows
+    namespace: argo
+    chart: argoproj/argo-workflows
+    version: ~0.2.6
+    # https://github.com/argoproj/argo-helm/blob/34e606f012ee81034037ce321dbba989c9c06b16/charts/argo-workflows/values.yaml#L40
+    values:
+      - controller:
+          image:
+            tag: "3.1.1"
+      - executor:
+          image:
+            tag: "3.1.1"
+      - server:
+          image:
+            tag: "3.1.1"
