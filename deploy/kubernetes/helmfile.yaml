@@ -17,10 +17,10 @@ releases:
     values:
       - controller:
           image:
-            tag: "3.1.1"
+            tag: "v3.1.1"
       - executor:
           image:
-            tag: "3.1.1"
+            tag: "v3.1.1"
       - server:
           image:
-            tag: "3.1.1"
+            tag: "v3.1.1"
