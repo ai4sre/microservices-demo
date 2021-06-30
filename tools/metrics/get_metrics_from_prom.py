@@ -303,13 +303,22 @@ def metrics_as_result(container_metrics, pod_metrics, node_metrics,
     return data
 
 
-def time_range_from_args(args):
+def get_unix_time(timestamp):
+    if timestamp.isdigit():  # check unix time
+        return int(timestamp)
+    if timestamp is None or not timestamp:
+        return 0
+    dt = datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%SZ')
+    return int(dt.timestamp())
+
+
+def time_range_from_args(params):
     """
     get unix timestamps range (start to end) from duration
     """
 
     duration = datetime.timedelta(seconds=0)
-    dt = args.duration
+    dt = params["duration"]
     if dt.endswith("s") or dt.endswith("sec"):
         duration = datetime.timedelta(seconds=int(dt[:-1]))
     elif dt.endswith("m") or dt.endswith("min"):
@@ -322,21 +331,22 @@ def time_range_from_args(args):
     duration = int(duration.total_seconds())
     now = int(datetime.datetime.now().timestamp())
     start, end = now - duration, now
-    if args.end is None and args.start is None:
+    if params["end"] is None and params["start"] is None:
         pass
-    elif args.end is not None and args.start is None:
-        end = args.end
+    elif params["end"] is not None and params["start"] is None:
+        end = get_unix_time(params["end"])
         start = end - duration
-    elif args.end is None and args.start is not None:
-        start = args.start
+    elif params["end"] is None and params["start"] is not None:
+        start = get_unix_time(params["start"])
         end = start + duration
-    elif args.end is not None and args.start is not None:
-        start, end = args.start, args.end
+    elif params["end"] is not None and params["start"] is not None:
+        start = get_unix_time(params["start"])
+        end = get_unix_time(params["end"])
     else:
-        raise("not reachable")
+        raise ValueError("not reachable")
 
-    start = start - start % args.step
-    end = end - end % args.step
+    start = start - start % params["step"]
+    end = end - end % params["step"]
     return start, end
 
 
@@ -348,21 +358,26 @@ def main():
     parser.add_argument("--grafana-url",
                         help="endpoint URL for grafana server",
                         default="http://localhost:3000")
-    parser.add_argument("--start", help="start epoch time", type=int)
-    parser.add_argument("--end", help="end epoch time", type=int)
+    parser.add_argument("--start", help="start time (UNIX or RFC 3339)", type=str)
+    parser.add_argument("--end", help="end time (UNIX or RFC 3339)", type=str)
     parser.add_argument("--step", help="step seconds", type=int, default=STEP)
     parser.add_argument("--duration", help="", type=str, default="30m")
     parser.add_argument("--out", help="output path", type=str)
     args = parser.parse_args()
 
     try:
-        start, end = time_range_from_args(args)
+        start, end = time_range_from_args({
+            "duration": args.duration,
+            "start": args.start,
+            "end": args.end,
+            "step": args.step,
+        })
         if start > end:
             print("start must be lower than end.", file=sys.stderr)
             parser.print_help()
             exit(-1)
-    except ValueError:
-        parser.print_help()
+    except ValueError as e:
+        print("parsing timestamp error:", e, file=sys.stderr)
         exit(-1)
 
     # get container metrics (cAdvisor)

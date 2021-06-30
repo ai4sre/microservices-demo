@@ -28,7 +28,7 @@ print-yaml:
 
 .PHONY: lint
 lint:
-	@$(CUE_EXPORT) | argo lint --strict --all-kinds -
+	@$(CUE_EXPORT) | argo lint --strict -
 
 .PHONY: anlys/run
 anlys/run: anlys/lint
