@@ -122,7 +122,7 @@ def kshape_clustering(target_df, service_name, executor):
     return clustering_info, remove_list
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("datafile", help="metrics JSON data file")
     parser.add_argument("--max-workers", help="number of processes", type=int, default=1)
@@ -253,3 +253,7 @@ if __name__ == '__main__':
     else:
         with open(args.out, mode='w') as f:
             json.dump(summary, f)
+
+
+if __name__ == '__main__':
+    main()
