@@ -5,7 +5,7 @@ import "strings"
 #appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
 #container: {
-	image: "lachlanevenson/k8s-kubectl"
+	image: "bitnami/kubectl"
 	command: ["sh", "-c"]
 	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
 }
@@ -181,6 +181,14 @@ spec: {
 			name: "appLabel"
 		}]
 		steps: [ [{
+			name: "reset-chaosengine"
+			template: "revert-chaosengine"
+			arguments: parameters: [{
+				name: "chaosEngineName"
+				value: #chaosEngineName
+			}]
+		}],
+		[{
 			name:     "inject-chaos-\( type )"
 			template: "inject-chaos-\( type )"
 			arguments: parameters: [{
@@ -190,7 +198,14 @@ spec: {
 				name:  "appLabel"
 				value: "{{inputs.parameters.appLabel}}"
 			}]
-		}, {
+		}], [{
+			name: "get-injection-finished-time"
+			template: "get-injection-finished-time"
+			arguments: parameters: [{
+				name:  "chaosEngineName"
+				value: #chaosEngineName
+			}]
+		}], [{
 			name:     "get-metrics"
 			template: "get-metrics-from-prometheus"
 			arguments: parameters: [{
@@ -202,8 +217,11 @@ spec: {
 			}, {
 				name: "chaosType"
 				value: "\( type )"
+			}, {
+				name: "endTimestamp"
+				value: "{{steps.get-injection-finished-time.outputs.result}}"
 			}]
-		}, {
+		}], [{
 			name: "restart-pod-injected-chaos"
 			template: "restart-pod"
 			arguments: parameters: [{
@@ -211,7 +229,7 @@ spec: {
 				value: "{{inputs.parameters.appLabel}}"
 			}]
 			when: "{{workflow.parameters.restartPod}} == 1"
-		}, {
+		}], [{
 			name: "revert-chaosengine"
 			template: "revert-chaosengine"
 			arguments: parameters: [{
@@ -221,6 +239,20 @@ spec: {
 		}],
 		]
 	}, {
+		// return <injection started time> + <chaos duration>
+		name: "get-injection-finished-time"
+		inputs: parameters: [{
+			name: "chaosEngineName"
+		}]
+		script: {
+			image: "bitnami/kubectl"
+			command: ["sh"]
+			source: """
+			ts=$(kubectl get chaosengine -n litmus -o=jsonpath='{.items[0].metadata.creationTimestamp}')
+			expr $(date -d $ts +'%s') + {{workflow.parameters.chaosDurationSec}}
+			"""
+		}
+	}, {
 		name: "get-metrics-from-prometheus"
 		inputs: parameters: [{
 			name: "jobN"
@@ -228,6 +260,8 @@ spec: {
 			name: "appLabel"
 		}, {
 			name: "chaosType"
+		}, {
+			name: "endTimestamp"
 		}]
 		container: {
 			image: "ghcr.io/ai4sre/metrics-tools:latest"
@@ -237,6 +271,8 @@ spec: {
 				"http://prometheus.monitoring.svc.cluster.local:9090",
 				"--grafana-url",
 				"http://grafana.monitoring.svc.cluster.local:3000",
+				"--end",
+				"{{inputs.parameters.endTimestamp}}",
 				"--out",
 				"/tmp/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}-{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json",
 			]
@@ -258,7 +294,7 @@ spec: {
 			name: "appLabel"
 		}]
 		container: {
-			image: "lachlanevenson/k8s-kubectl"
+			image: "bitnami/kubectl"
 			command: ["sh", "-c"]
 			args: ["kubectl rollout restart deployment/{{inputs.parameters.appLabel}} -n {{workflow.parameters.appNamespace}}; echo sleeping for 60 seconds; sleep 60; echo done"]
 		}
@@ -268,9 +304,9 @@ spec: {
 			name: "chaosEngineName"
 		}]
 		container: {
-			image: "lachlanevenson/k8s-kubectl"
+			image: "bitnami/kubectl"
         	command: ["sh", "-c"]
-        	args: ["kubectl delete chaosengine {{inputs.parameters.chaosEngineName}} -n {{workflow.parameters.adminModeNamespace}}"]
+        	args: ["kubectl delete --wait chaosengine {{inputs.parameters.chaosEngineName}} -n {{workflow.parameters.adminModeNamespace}}; true"]
 		}
 	}, {
 		name: "sleep-n-sec"
