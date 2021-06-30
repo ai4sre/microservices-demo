@@ -245,10 +245,9 @@ spec: {
 			name: "chaosEngineName"
 		}]
 		script: {
-			image: "lachlanevenson/k8s-kubectl"
+			image: "bitnami/kubectl"
 			command: ["sh"]
 			source: """
-			apk add --update coreutils >/dev/null && rm -rf /var/cache/apk/*
 			ts=$(kubectl get chaosengine -n litmus -o=jsonpath='{.items[0].metadata.creationTimestamp}')
 			expr $(date -d $ts +'%s') + {{workflow.parameters.chaosDurationSec}}
 			"""
