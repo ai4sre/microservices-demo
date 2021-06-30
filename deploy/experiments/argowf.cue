@@ -104,9 +104,6 @@ spec: {
 		name:  "chaosDurationSec"
 		value: 300
 	}, {
-		name:  "chaosWaitSec"
-		value: 240
-	}, {
 		name:  "chaosIntervalSec"
 		value: 1800 // 30min
 	}, {
@@ -350,7 +347,7 @@ spec: {
 		container: {
 			image: "bitnami/kubectl"
 			command: ["sh", "-c"]
-			args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
+			args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosDurationSec}}s\"; sleep {{workflow.parameters.chaosDurationSec}}"]
 		}
 	}]
 }
