@@ -5,7 +5,7 @@ import "strings"
 #appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
 #container: {
-	image: "lachlanevenson/k8s-kubectl"
+	image: "bitnami/kubectl"
 	command: ["sh", "-c"]
 	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
 }
@@ -294,7 +294,7 @@ spec: {
 			name: "appLabel"
 		}]
 		container: {
-			image: "lachlanevenson/k8s-kubectl"
+			image: "bitnami/kubectl"
 			command: ["sh", "-c"]
 			args: ["kubectl rollout restart deployment/{{inputs.parameters.appLabel}} -n {{workflow.parameters.appNamespace}}; echo sleeping for 60 seconds; sleep 60; echo done"]
 		}
@@ -304,7 +304,7 @@ spec: {
 			name: "chaosEngineName"
 		}]
 		container: {
-			image: "lachlanevenson/k8s-kubectl"
+			image: "bitnami/kubectl"
         	command: ["sh", "-c"]
         	args: ["kubectl delete --wait chaosengine {{inputs.parameters.chaosEngineName}} -n {{workflow.parameters.adminModeNamespace}}; true"]
 		}
