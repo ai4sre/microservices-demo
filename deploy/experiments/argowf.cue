@@ -4,12 +4,6 @@ import "strings"
 
 #appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
-#container: {
-	image: "bitnami/kubectl"
-	command: ["sh", "-c"]
-	args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
-}
-
 #chaosTypeToExps: {
 	"pod-cpu-hog": [{
 		name: "pod-cpu-hog"
@@ -353,6 +347,10 @@ spec: {
 				}
 			}]
 		}
-		container: #container
+		container: {
+			image: "bitnami/kubectl"
+			command: ["sh", "-c"]
+			args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosWaitSec}}s\"; sleep {{workflow.parameters.chaosWaitSec}}"]
+		}
 	}]
 }
