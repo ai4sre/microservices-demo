@@ -2,4 +2,5 @@ resources:
 - manifests
 - manifests-loadtest
 - manifests-monitoring
+- manifests-jaeger
 - manifests-litmus
