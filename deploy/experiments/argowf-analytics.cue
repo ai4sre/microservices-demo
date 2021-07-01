@@ -116,8 +116,9 @@ spec: {
 		container: {
 			image: "ghcr.io/ai4sre/tsdr-tools:latest"
 			imagePullPolicy: "Always"
-			command: ["/usr/src/app/{{inputs.parameters.tsdrMethod}}.py"]
-			args: [ "--max-workers", "2",
+			command: ["/usr/src/app/tsdr.py"]
+			args: [ "--method", "{{inputs.parameters.tsdrMethod}}",
+					"--max-workers", "2",
 					"--out", "/tmp/results.json", 
 					"/tmp/metrics.json"]
 		}
