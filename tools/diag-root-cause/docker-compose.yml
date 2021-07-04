@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  diag:
+    build: .
+    volumes:
+      - ./:/usr/src/app
+    entrypoint: ["/usr/src/app/diag.py"]
