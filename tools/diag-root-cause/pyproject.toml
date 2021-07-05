@@ -12,8 +12,13 @@ pandas = "^1.2.5"
 pcalg = "^0.2.0"
 scipy = "^1.6.3"
 scikit-learn = "^0.24.2"
+ipython = "^7.25.0"
+pygraphviz = "^1.7"
 
 [tool.poetry.dev-dependencies]
+flake8 = "^3.9.2"
+mypy = "^0.910"
+autopep8 = "^1.5.7"
 
 [build-system]
 requires = ["poetry>=0.12"]
