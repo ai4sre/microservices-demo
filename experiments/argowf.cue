@@ -14,15 +14,15 @@ import "strings"
 		"""
 		comparator: {
 			criteria: ">="
-			value: "100000" // 10k qps
+			value: "9000" // 9k qps
 		}
 	}
-	mode: "EOT"
+	mode: "SOT"
 	runProperties: {
-		initialDelaySeconds: 30
 		probeTimeout: 5
-		interval: 30
-		retry: 50
+		interval: 15 // prometheus scraping interval
+		retry: 3
+		stopOnFailure: true
 	}
 }]
 
@@ -110,8 +110,8 @@ import "strings"
 				name:  "TOTAL_CHAOS_DURATION"
 				value: "{{workflow.parameters.chaosDurationSec}}"
 			}]
+			probe: #probe
 		}
-		probe: #probe
 	}]
 }
 
@@ -202,6 +202,7 @@ spec: {
 		}] ]
 	}, for type, _ in #chaosTypeToExps {
 		#chaosEngineName: "{{inputs.parameters.appLabel}}-\( type )-{{inputs.parameters.jobN}}"
+		#chaosResultName: "\( #chaosEngineName )-\( type )"
 		name: "inject-chaos-\( type )-and-get-metrics"
 		inputs: parameters: [{
 			name: "jobN"
@@ -214,6 +215,9 @@ spec: {
 			arguments: parameters: [{
 				name: "chaosEngineName"
 				value: #chaosEngineName
+			}, {
+				name:  "chaosResultName"
+				value: #chaosResultName
 			}]
 		}],
 		[{
@@ -222,6 +226,9 @@ spec: {
 			arguments: parameters: [{
 				name:  "chaosEngineName"
 				value: #chaosEngineName
+			}, {
+				name:  "chaosResultName"
+				value: #chaosResultName
 			}, {
 				name:  "appLabel"
 				value: "{{inputs.parameters.appLabel}}"
@@ -263,6 +270,9 @@ spec: {
 			arguments: parameters: [{
 				name:  "chaosEngineName"
 				value: #chaosEngineName
+			}, {
+				name:  "chaosResultName"
+				value: #chaosResultName
 			}]
 		}],
 		]
@@ -330,11 +340,17 @@ spec: {
 		name: "revert-chaosengine"
 		inputs: parameters: [{
 			name: "chaosEngineName"
+		}, {
+			name: "chaosResultName"
 		}]
 		container: {
 			image: "bitnami/kubectl"
         	command: ["sh", "-c"]
-        	args: ["kubectl delete --wait chaosengine {{inputs.parameters.chaosEngineName}} -n {{workflow.parameters.adminModeNamespace}}; true"]
+        	args: ["""
+			kubectl delete --wait chaosengine {{inputs.parameters.chaosEngineName}} -n {{workflow.parameters.adminModeNamespace}};
+			kubectl delete --wait chaosresult {{inputs.parameters.chaosResultName}} -n {{workflow.parameters.adminModeNamespace}};
+			true
+			"""]
 		}
 	}, {
 		name: "sleep-n-sec"
@@ -351,6 +367,8 @@ spec: {
 		inputs: {
 			parameters: [{
 				name: "chaosEngineName"
+			}, {
+				name: "chaosResultName"
 			}, {
 				name: "appLabel"
 			}]
@@ -381,10 +399,24 @@ spec: {
 				}
 			}]
 		}
-		container: {
+		script: {
 			image: "bitnami/kubectl"
-			command: ["sh", "-c"]
-			args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosDurationSec}}s\"; sleep {{workflow.parameters.chaosDurationSec}}"]
+			command: ["sh"]
+			// Wait until chaosresult resource is found
+			source: """
+			kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}
+			while true; do
+				status=$(kubectl get -n {{workflow.parameters.adminModeNamespace}} chaosengines/{{inputs.parameters.chaosEngineName}} -o jsonpath='{.status.engineStatus}')
+				if [ $? -eq 0 ]; then
+					if [ $status = 'completed' ]; then
+						exit 0
+					fi
+				fi
+				sleep 3
+			done
+			"""
+			// timeout
+			activeDeadlineSeconds: {{=asInt(workflow.parameters.chaosDurationSec) * 2}}
 		}
 	}]
 }
