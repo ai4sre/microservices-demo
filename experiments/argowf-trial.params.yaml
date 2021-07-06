@@ -1,6 +1,5 @@
 repeatNum: 1
 chaosDurationSec: 30
-chaosWaitSec: 20
 chaosIntervalSec: 60
 appLabels:
   - user-db

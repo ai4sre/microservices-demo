@@ -1,8 +1,8 @@
 version: '3'
 
 services:
-  tsdr:
+  diag:
     build: .
     volumes:
       - ./:/usr/src/app
-    entrypoint: ["/usr/src/app/tsdr.py"]
+    entrypoint: ["/usr/src/app/diag.py"]
