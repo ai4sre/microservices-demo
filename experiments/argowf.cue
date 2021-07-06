@@ -4,77 +4,114 @@ import "strings"
 
 #appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
+#probe: [{
+	name: "check-front-end-qps"
+	type: "promProbe"
+	"promProbe/inputs": {
+		endpoint: "http://prometheus.monitoring.svc.cluster.local:9090"
+		query: """
+		sum(rate(request_duration_seconds_count{name='front-end',status_code=~'2..',route!='metrics'}[1m])) * 100
+		"""
+		comparator: {
+			criteria: ">="
+			value: "9000" // 9k qps
+		}
+	}
+	mode: "SOT"
+	runProperties: {
+		probeTimeout: 5
+		interval: 15 // prometheus scraping interval
+		retry: 3
+		stopOnFailure: true
+	}
+}]
+
 #chaosTypeToExps: {
 	"pod-cpu-hog": [{
 		name: "pod-cpu-hog"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "CPU_CORES"
-			value: "2"
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: {
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "CPU_CORES"
+				value: "2"
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+			probe: #probe
+		}
 	}]
 	"pod-memory-hog": [{
 		name: "pod-memory-hog"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "MEMORY_CONSUMPTION"
-			value: "500" // 500MB
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: {
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "MEMORY_CONSUMPTION"
+				value: "500" // 500MB
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+			probe: #probe
+		}
 	}]
 	"pod-network-loss": [{
 		name: "pod-network-loss"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "NETWORK_INTERFACE"
-			value: "eth0"
-		}, {
-			name: "NETWORK_PACKET_LOSS_PERCENTAGE"
-			value: "60"
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: { 
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "NETWORK_INTERFACE"
+				value: "eth0"
+			}, {
+				name: "NETWORK_PACKET_LOSS_PERCENTAGE"
+				value: "60"
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+			probe: #probe
+		}
 	}]
 	"pod-network-latency": [{
 		name: "pod-network-latency"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "NETWORK_INTERFACE"
-			value: "eth0"
-		}, {
-			name: "NETWORK_LATENCY"
-			value: "2000"
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: {
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "NETWORK_INTERFACE"
+				value: "eth0"
+			}, {
+				name: "NETWORK_LATENCY"
+				value: "2000"
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+			probe: #probe
+		}
 	}]
 	"pod-io-stress": [{
 		name: "pod-io-stress"
-		spec: components: env: [{
-			name:  "TARGET_CONTAINER"
-			value: "{{inputs.parameters.appLabel}}"
-		}, {
-			name:  "FILESYSTEM_UTILIZATION_PERCENTAGE"
-			value: "50"
-		}, {
-			name:  "TOTAL_CHAOS_DURATION"
-			value: "{{workflow.parameters.chaosDurationSec}}"
-		}]
+		spec: {
+			components: env: [{
+				name:  "TARGET_CONTAINER"
+				value: "{{inputs.parameters.appLabel}}"
+			}, {
+				name:  "FILESYSTEM_UTILIZATION_PERCENTAGE"
+				value: "50"
+			}, {
+				name:  "TOTAL_CHAOS_DURATION"
+				value: "{{workflow.parameters.chaosDurationSec}}"
+			}]
+			probe: #probe
+		}
 	}]
 }
 
@@ -165,6 +202,7 @@ spec: {
 		}] ]
 	}, for type, _ in #chaosTypeToExps {
 		#chaosEngineName: "{{inputs.parameters.appLabel}}-\( type )-{{inputs.parameters.jobN}}"
+		#chaosResultName: "\( #chaosEngineName )-\( type )"
 		name: "inject-chaos-\( type )-and-get-metrics"
 		inputs: parameters: [{
 			name: "jobN"
@@ -177,6 +215,9 @@ spec: {
 			arguments: parameters: [{
 				name: "chaosEngineName"
 				value: #chaosEngineName
+			}, {
+				name:  "chaosResultName"
+				value: #chaosResultName
 			}]
 		}],
 		[{
@@ -185,6 +226,9 @@ spec: {
 			arguments: parameters: [{
 				name:  "chaosEngineName"
 				value: #chaosEngineName
+			}, {
+				name:  "chaosResultName"
+				value: #chaosResultName
 			}, {
 				name:  "appLabel"
 				value: "{{inputs.parameters.appLabel}}"
@@ -226,6 +270,9 @@ spec: {
 			arguments: parameters: [{
 				name:  "chaosEngineName"
 				value: #chaosEngineName
+			}, {
+				name:  "chaosResultName"
+				value: #chaosResultName
 			}]
 		}],
 		]
@@ -293,11 +340,17 @@ spec: {
 		name: "revert-chaosengine"
 		inputs: parameters: [{
 			name: "chaosEngineName"
+		}, {
+			name: "chaosResultName"
 		}]
 		container: {
 			image: "bitnami/kubectl"
         	command: ["sh", "-c"]
-        	args: ["kubectl delete --wait chaosengine {{inputs.parameters.chaosEngineName}} -n {{workflow.parameters.adminModeNamespace}}; true"]
+        	args: ["""
+			kubectl delete --wait chaosengine {{inputs.parameters.chaosEngineName}} -n {{workflow.parameters.adminModeNamespace}};
+			kubectl delete --wait chaosresult {{inputs.parameters.chaosResultName}} -n {{workflow.parameters.adminModeNamespace}};
+			true
+			"""]
 		}
 	}, {
 		name: "sleep-n-sec"
@@ -314,6 +367,8 @@ spec: {
 		inputs: {
 			parameters: [{
 				name: "chaosEngineName"
+			}, {
+				name: "chaosResultName"
 			}, {
 				name: "appLabel"
 			}]
@@ -344,10 +399,24 @@ spec: {
 				}
 			}]
 		}
-		container: {
+		script: {
 			image: "bitnami/kubectl"
-			command: ["sh", "-c"]
-			args: ["kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}; echo \"waiting {{workflow.parameters.chaosDurationSec}}s\"; sleep {{workflow.parameters.chaosDurationSec}}"]
+			command: ["sh"]
+			// Wait until chaosresult resource is found
+			source: """
+			kubectl apply -f /tmp/chaosengine.yaml -n {{workflow.parameters.adminModeNamespace}}
+			while true; do
+				status=$(kubectl get -n {{workflow.parameters.adminModeNamespace}} chaosengines/{{inputs.parameters.chaosEngineName}} -o jsonpath='{.status.engineStatus}')
+				if [ $? -eq 0 ]; then
+					if [ $status = 'completed' ]; then
+						exit 0
+					fi
+				fi
+				sleep 3
+			done
+			"""
+			// timeout
+			activeDeadlineSeconds: {{=asInt(workflow.parameters.chaosDurationSec) * 2}}
 		}
 	}]
 }
