@@ -411,5 +411,7 @@ spec: {
 			done
 			"""
 		}
+		// timeout
+		timeout: "{{=asInt(workflow.parameters.chaosDurationSec) * 2}}"
 	}]
 }
