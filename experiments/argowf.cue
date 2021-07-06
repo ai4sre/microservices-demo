@@ -227,9 +227,6 @@ spec: {
 				name:  "chaosEngineName"
 				value: #chaosEngineName
 			}, {
-				name:  "chaosResultName"
-				value: #chaosResultName
-			}, {
 				name:  "appLabel"
 				value: "{{inputs.parameters.appLabel}}"
 			}]
@@ -368,8 +365,6 @@ spec: {
 			parameters: [{
 				name: "chaosEngineName"
 			}, {
-				name: "chaosResultName"
-			}, {
 				name: "appLabel"
 			}]
 			artifacts: [{
@@ -415,8 +410,6 @@ spec: {
 				sleep 3
 			done
 			"""
-			// timeout
-			activeDeadlineSeconds: {{=asInt(workflow.parameters.chaosDurationSec) * 2}}
 		}
 	}]
 }
