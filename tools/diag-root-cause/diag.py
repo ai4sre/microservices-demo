@@ -72,7 +72,7 @@ def read_data_file(metric_file, tsdr_result_file):
                     metric_name = metric["metric_name"].replace("container_", "").replace("node_", "")
                     target_name = metric[
                         "{}_name".format(target[:-1]) if target != "middlewares" else "container_name"].replace(
-                        "gke-microservices-experi-default-pool-", "")
+                        "gke-sock-shop-01-default-pool-", "")
                     column_name = "{}-{}_{}".format(target[0], target_name, metric_name)
                     if column_name not in reduced_metrics:
                         continue

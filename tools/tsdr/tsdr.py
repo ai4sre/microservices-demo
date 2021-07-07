@@ -316,8 +316,8 @@ def read_metrics_json(data_file):
                     metric_name = metric["metric_name"].replace("container_", "").replace("node_", "")
                     target_name = metric[
                         "{}_name".format(target[:-1]) if target != "middlewares" else "container_name"].replace(
-                        "gke-microservices-experi-default-pool-", "")
-                    if re.match("^gke-microservices-experi", target_name):
+                        "gke-sock-shop-01-default-pool-", "")
+                    if re.match("^gke-sock-shop-01", target_name):
                         continue
                     if target_name in ["queue-master", "rabbitmq", "session-db"]:
                         continue
