@@ -40,19 +40,20 @@ $ gcloud container node-pools create analytics-pool \
 3. Setup for Workload Identity.
 
 ```shell-session
-$ gcloud iam service-accounts create sock-shop-01
+$ export CLUSTER_NAME='sock-shop-01'
+$ gcloud iam service-accounts create $CLUSTER_NAME
 ```
 
 ```shell-session
-$ gcloud projects add-iam-policy-binding $PROJECT_ID --member serviceAccount:sock-shop-01@$PROJECT_IDwwwwwwwww.iam.gserviceaccount.com --role roles/storage.objectAdmin
+$ gcloud projects add-iam-policy-binding $PROJECT_ID --member serviceAccount:$CLUSTER_NAME@$PROJECT_ID.iam.gserviceaccount.com --role roles/storage.objectAdmin
 ```
 
 ```shell-session
-$ gcloud iam service-accounts add-iam-policy-binding --role roles/iam.workloadIdentityUser --member "serviceAccount:$PROJECT_ID.svc.id.goog[litmus/argo-chaos]" sock-shop-01@$PROJECT_ID.iam.gserviceaccount.com
+$ gcloud iam service-accounts add-iam-policy-binding --role roles/iam.workloadIdentityUser --member "serviceAccount:$PROJECT_ID.svc.id.goog[litmus/argo-chaos]" $CLUSTER_NAME@$PROJECT_ID.iam.gserviceaccount.com
 ```
 
 ```shell-session
-$ kubectl annotate serviceaccount --namespace litmus argo-chaos iam.gke.io/gcp-service-account=sock-shop-01@$PROJECT_ID.iam.gserviceaccount.com
+$ kubectl annotate serviceaccount --namespace litmus argo-chaos iam.gke.io/gcp-service-account=$CLUSTER_NAME@$PROJECT_ID.iam.gserviceaccount.com
 ```
 
 4. Create GCS buckets (TBD)
