@@ -109,15 +109,21 @@ import "strings"
 			probe: #probe
 		}
 	}]
-	"pod-io-stress": [{
-		name: "pod-io-stress"
+	"pod-ioreq-stress": [{
+		name: "pod-cpu-hog"
 		spec: {
 			components: env: [{
 				name:  "TARGET_CONTAINER"
 				value: "{{inputs.parameters.appLabel}}"
 			}, {
-				name:  "FILESYSTEM_UTILIZATION_PERCENTAGE"
-				value: "50"
+				name:  "CPU_CORES"
+				value: "2"
+			}, {
+				name: "CHAOS_INJECT_COMMAND"
+				value: "stress-ng --io 2"
+			}, {
+				name: "CHAOS_KILL_COMMAND"
+				value: "kill -9 $(ps afx | grep \"[stress-ng] --io 2\" | awk '{print$1}' | tr '\n' ' ')"
 			}, {
 				name:  "TOTAL_CHAOS_DURATION"
 				value: "{{workflow.parameters.chaosDurationSec}}"
