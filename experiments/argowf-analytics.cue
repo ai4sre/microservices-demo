@@ -113,23 +113,26 @@ spec: {
 				}
 			} ]
 		}
+		#result_file_name: """
+		{{inputs.parameters.tsdrMethod}}-{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}.json
+		"""
 		container: {
 			image: "ghcr.io/ai4sre/tsdr-tools:latest"
 			imagePullPolicy: "Always"
 			command: ["/usr/src/app/tsdr.py"]
 			args: [ "--method", "{{inputs.parameters.tsdrMethod}}",
 					"--max-workers", "2",
-					"--out", "/tmp/results.json", 
+					"--out", "/tmp/\(#result_file_name)", 
 					"/tmp/metrics.json"]
 		}
 		outputs: artifacts: [{
 			name: "tsdr-outputs"
-			path: "/tmp/results.json"
+			path: "/tmp/\(#result_file_name)"
 			gcs: {
 				bucket: "{{workflow.parameters.gcsBucket}}"
 				// see https://github.com/argoproj/argo-workflows/blob/510b4a816dbb2d33f37510db1fd92b841c4d14d3/docs/workflow-controller-configmap.yaml#L93-L106
 				key: """
-				{{inputs.parameters.filePath}}/results/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}.json.tgz
+				results/{{=sprig.trimSuffix('.tgz', inputs.parameters.filePath)}}/\( #result_file_name + ".tgz" )
 				"""
 			}
 		}]

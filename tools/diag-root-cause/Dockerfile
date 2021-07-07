@@ -14,6 +14,17 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
   PIP_NO_CACHE_DIR=off \
   PIP_DISABLE_PIP_VERSION_CHECK=on
 
+RUN set -eux; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+    libc6-dev \
+    libffi-dev \
+    gcc \
+    graphviz \
+    graphviz-dev \
+  ; \
+  rm -rf /var/lib/apt/lists/*
+
 WORKDIR /usr/src/app
 
 COPY --from=builder /usr/src/app/requirements.txt .

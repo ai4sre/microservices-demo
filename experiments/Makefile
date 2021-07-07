@@ -37,7 +37,7 @@ anlys/run: anlys/lint
 
 .PHONY: anlys/lint
 anlys/lint:
-	$(CUE_ANLYS_EXPORT) | argo lint --strict --all-kinds -
+	$(CUE_ANLYS_EXPORT) | argo lint --strict -
 
 .PHONY: logs-latest
 logs-latest:

@@ -137,3 +137,5 @@ output-virtualbox-iso
 
 # Ignore checkpoint files
 .ipynb_checkpoints
+
+.mypy_cache
