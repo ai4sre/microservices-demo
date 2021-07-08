@@ -109,28 +109,28 @@ import "strings"
 			probe: #probe
 		}
 	}]
-	"pod-ioreq-stress": [{
-		name: "pod-cpu-hog"
-		spec: {
-			components: env: [{
-				name:  "TARGET_CONTAINER"
-				value: "{{inputs.parameters.appLabel}}"
-			}, {
-				name:  "CPU_CORES"
-				value: "2"
-			}, {
-				name: "CHAOS_INJECT_COMMAND"
-				value: "stress-ng --io 2"
-			}, {
-				name: "CHAOS_KILL_COMMAND"
-				value: "kill -9 $(ps afx | grep \"[stress-ng] --io 2\" | awk '{print$1}' | tr '\n' ' ')"
-			}, {
-				name:  "TOTAL_CHAOS_DURATION"
-				value: "{{workflow.parameters.chaosDurationSec}}"
-			}]
-			probe: #probe
-		}
-	}]
+	// "pod-ioreq-stress": [{
+	// 	name: "pod-cpu-hog"
+	// 	spec: {
+	// 		components: env: [{
+	// 			name:  "TARGET_CONTAINER"
+	// 			value: "{{inputs.parameters.appLabel}}"
+	// 		}, {
+	// 			name:  "CPU_CORES"
+	// 			value: "1"
+	// 		}, {
+	// 			name: "CHAOS_INJECT_COMMAND"
+	// 			value: "stress-ng --io 2"
+	// 		}, {
+	// 			name: "CHAOS_KILL_COMMAND"
+	// 			value: "kill -9 $(ps afx | grep \"[stress\-ng]\" | awk '{print$1}' | tr '\n' ' ')"
+	// 		}, {
+	// 			name:  "TOTAL_CHAOS_DURATION"
+	// 			value: "{{workflow.parameters.chaosDurationSec}}"
+	// 		}]
+	// 		probe: #probe
+	// 	}
+	// }]
 }
 
 apiVersion: "argoproj.io/v1alpha1"
