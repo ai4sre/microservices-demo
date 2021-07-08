@@ -5,11 +5,11 @@ This project build an experimental infrastructure for AIOps. (Work in Progress)
 1. Generate automatically MELT (Metrics, Events, Logs, Traces) data including performance anomaly.
 2. Analyze the generated data with machine learning algorithms.
 
-This repository is forked from [microservices-demon/microservices-demo](https://github.com/microservices-demo/microservices-demo).
+This repository is forked from [microservices-demo/microservices-demo](https://github.com/microservices-demo/microservices-demo).
 
-## How to deploy
+## How to deploy application and monitoring stack
 
-TBD
+[Documentation](./manifests/README.md)
 
 ## LICENSE
 
