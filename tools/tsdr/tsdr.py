@@ -364,8 +364,11 @@ def main():
                         help="number of metrics (for experiment)",
                         type=int, default=None)
     parser.add_argument("--out", help="output path", type=str)
-    parser.add_argument("--results-dir", 
+    parser.add_argument("--results-dir",
                         help="output directory",
+                        type=bool, default=False)
+    parser.add_argument("--include-raw-data",
+                        help="include time series to results",
                         type=bool, default=False)
     args = parser.parse_args()
 
@@ -396,6 +399,8 @@ def main():
     summary["metrics_dimension"] = metrics_dimension
     summary["reduced_metrics"] = list(reduced_df.columns)
     summary["clustering_info"] = clustering_info
+    if args.include_raw_data:
+        summary["reduced_metrics_raw_data"] = reduced_df.to_dict()
 
     if args.results_dir:
         file_name = "{}_{}.json".format(
