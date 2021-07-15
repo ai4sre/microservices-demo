@@ -57,7 +57,7 @@ SERVICE_CONTAINERS = {
 }
 
 
-def read_data_file(metric_file, tsdr_result_file):
+def read_data_file(tsdr_result_file):
     tsdr_result = json.load(open(tsdr_result_file))
     reduced_df = pd.DataFrame.from_dict(
         tsdr_result['reduced_metrics_raw_data'])
@@ -126,12 +126,11 @@ def build_causal_graph(dm, labels, init_g):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("datafile", help="metrics JSON data file")
     parser.add_argument("tsdr_resultfile", help="results file of tsdr")
     args = parser.parse_args()
 
     reduced_df, metrics_dimension, clustering_info, mappings = \
-        read_data_file(args.datafile, args.tsdr_resultfile)
+        read_data_file(args.tsdr_resultfile)
     labels = {}
     for i in range(len(reduced_df.columns)):
         labels[i] = reduced_df.columns[i]
