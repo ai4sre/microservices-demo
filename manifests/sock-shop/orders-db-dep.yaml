@@ -35,10 +35,10 @@ spec:
           name: tmp-volume
         resources:
           limits:
-            cpu: 500m
+            cpu: 400m
             memory: 200Mi
           requests:
-            cpu: 100m
+            cpu: 400m
             memory: 200Mi
       - name: mongodb-exporter
         image: ssheehy/mongodb-exporter:0.10.0

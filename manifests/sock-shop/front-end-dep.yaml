@@ -10,7 +10,7 @@ metadata:
     litmuschaos.io/chaos: "true"
   namespace: sock-shop
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       name: front-end
@@ -26,10 +26,10 @@ spec:
         image: weaveworksdemos/front-end:0.3.12
         resources:
           limits:
-            cpu: 300m
-            memory: 1000Mi
+            cpu: 400m
+            memory: 300Mi
           requests:
-            cpu: 100m
+            cpu: 400m
             memory: 300Mi
         ports:
         - containerPort: 8079
