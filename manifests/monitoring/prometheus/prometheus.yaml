@@ -27,6 +27,10 @@ scrape_configs:
     tls_config:
       ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
     bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+    - action: labelmap
+      regex: __meta_kubernetes_node_label_cloud_google_com_gke_nodepool
+      replacement: nodepool
 
   - job_name: kubernetes-service-endpoints
     scheme: http
