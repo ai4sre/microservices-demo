@@ -122,6 +122,7 @@ spec: {
 			command: ["/usr/src/app/tsdr.py"]
 			args: [ "--method", "{{inputs.parameters.tsdrMethod}}",
 					"--max-workers", "2",
+					"--include-raw-data",
 					"--out", "/tmp/\(#result_file_name)", 
 					"/tmp/metrics.json"]
 		}
