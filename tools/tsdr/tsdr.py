@@ -321,6 +321,8 @@ def read_metrics_json(data_file):
                 ]
                 if target_name in ["queue-master", "rabbitmq", "session-db"]:
                     continue
+                # remove ';node-exporter' suffix of k8s node name.
+                target_name = re.sub(';node-exporter$', '', target_name)
                 column_name = "{}-{}_{}".format(target[0], target_name, metric_name)
                 data_df[column_name] = np.array(metric["values"], dtype=np.float64)[:, 1][-PLOTS_NUM:]
     data_df = data_df.round(4)
