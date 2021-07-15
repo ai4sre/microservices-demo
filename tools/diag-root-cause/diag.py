@@ -16,7 +16,7 @@ from citest.fisher_z import ci_test_fisher_z
 SIGNIFICANCE_LEVEL = 0.05
 
 TARGET_DATA = {
-    "containers": "all",
+    "containers": [],  # all
     "services": ["throughput", "latency"],
     "nodes": [
         "node_cpu_seconds_total",
@@ -58,31 +58,20 @@ SERVICE_CONTAINERS = {
 
 
 def read_data_file(metric_file, tsdr_result_file):
-    raw_metrics = pd.read_json(metric_file)
-    raw_result = json.load(open(tsdr_result_file))
+    tsdr_result = json.load(open(tsdr_result_file))
+    reduced_df = pd.DataFrame.from_dict(
+        tsdr_result['reduced_metrics_raw_data'])
 
-    plots_num = raw_result['number_of_plots']
-    reduced_metrics = raw_result['reduced_metrics']
+    # Filter by specified target metrics
+    for target, metrics in TARGET_DATA.items():
+        if not metrics:
+            continue
+        filtered_metrics = '|'.join(metrics)
+        # Match like 's-front-end_latency'
+        reduced_df = reduced_df.filter(regex=f"_{filtered_metrics}$", axis=0)
 
-    reduced_df = pd.DataFrame()
-    for target in TARGET_DATA:
-        for t in raw_metrics[target].dropna():
-            for metric in t:
-                if metric["metric_name"] in TARGET_DATA[target] or TARGET_DATA[target] == "all":
-                    metric_name = metric["metric_name"].replace("container_", "").replace("node_", "")
-                    target_name = metric[
-                        "{}_name".format(target[:-1]) if target != "middlewares" else "container_name"].replace(
-                        "gke-sock-shop-01-default-pool-", "")
-                    column_name = "{}-{}_{}".format(target[0], target_name, metric_name)
-                    if column_name not in reduced_metrics:
-                        continue
-                    reduced_df[column_name] = np.array(
-                        metric["values"], dtype=np.float64
-                    )[:, 1][-plots_num:]
-    reduced_df = reduced_df.round(4).interpolate(
-        method="spline", order=3, limit_direction="both")
-    return reduced_df, raw_result['metrics_dimension'], \
-        raw_result['clustering_info'], raw_metrics["mappings"].dropna()
+    return reduced_df, tsdr_result['metrics_dimension'], \
+        tsdr_result['clustering_info'], tsdr_result['components_mappings']
 
 
 def prepare_init_graph(reduced_df, no_paths):
@@ -262,6 +251,8 @@ def main():
     for service in SERVICE_CONTAINERS:
         for con in containers_metrics:
             if con not in SERVICE_CONTAINERS[service]:
+                if service not in services_metrics:
+                    continue
                 for s1 in services_metrics[service]:
                     for c2 in containers_metrics[con]:
                         no_paths.append([s1, c2])
