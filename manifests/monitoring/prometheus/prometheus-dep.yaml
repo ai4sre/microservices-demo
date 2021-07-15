@@ -47,7 +47,7 @@ spec:
         args:
         - '--storage.tsdb.retention.time=7200h'
         - '--storage.tsdb.path=/var/lib/prometheus'
-        - '--config.file=/etc/prometheus/prometheus.yml'
+        - '--config.file=/etc/prometheus/prometheus.yaml'
         - '--log.level=debug'
         ports:
         - name: web
@@ -62,7 +62,7 @@ spec:
       volumes:
       - name: config-volume
         configMap:
-          name: prometheus-configmap
+          name: prometheus-config
       # - name: alertrules-volume
       #   configMap:
       #     name: prometheus-alertrules
