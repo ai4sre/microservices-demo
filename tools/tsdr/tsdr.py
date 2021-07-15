@@ -366,10 +366,10 @@ def main():
     parser.add_argument("--out", help="output path", type=str)
     parser.add_argument("--results-dir",
                         help="output directory",
-                        type=bool, default=False)
+                        action='store_true')
     parser.add_argument("--include-raw-data",
                         help="include time series to results",
-                        type=bool, default=False)
+                        action='store_true')
     args = parser.parse_args()
 
     data_df = read_metrics_json(args.datafile)
