@@ -14,9 +14,10 @@ $ gcloud container clusters create sock-shop-01 \
 	--cluster-version 1.19.10-gke.1700 \
 	--image-type=cos \
 	--machine-type e2-standard-2 \
-	--workload-pool="${PROJECT_ID}.svc.id.goog" \
 	--num-nodes 3 \
-	--workload-metadata=GKE_METADATA
+	--workload-pool="${PROJECT_ID}.svc.id.goog" \
+	--workload-metadata=GKE_METADATA \
+	--no-enable-stackdriver-kubernetes
 ```
 
 2. Create additional GKE node-pools.
