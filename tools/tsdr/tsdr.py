@@ -312,17 +312,19 @@ def read_metrics_json(data_file):
     for target in TARGET_DATA:
         for t in raw_data[target].dropna():
             for metric in t:
-                if metric["metric_name"] in TARGET_DATA[target] or TARGET_DATA[target] == "all":
-                    metric_name = metric["metric_name"].replace("container_", "").replace("node_", "")
-                    target_name = metric[
-                        "{}_name".format(target[:-1]) if target != "middlewares" else "container_name"].replace(
-                        "gke-sock-shop-01-default-pool-", "")
-                    if re.match("^gke-sock-shop-01", target_name):
-                        continue
-                    if target_name in ["queue-master", "rabbitmq", "session-db"]:
-                        continue
-                    column_name = "{}-{}_{}".format(target[0], target_name, metric_name)
-                    data_df[column_name] = np.array(metric["values"], dtype=np.float64)[:, 1][-PLOTS_NUM:]
+                if metric["metric_name"] not in TARGET_DATA[target] and TARGET_DATA[target] != "all":
+                    continue
+                metric_name = metric["metric_name"].replace("container_", "").replace("node_", "")
+                target_name = metric[
+                    "{}_name".format(target[:-1]) if target != "middlewares"
+                    else "container_name"
+                    ].replace("gke-sock-shop-01-default-pool-", "")
+                if re.match("^gke-sock-shop-01", target_name):
+                    continue
+                if target_name in ["queue-master", "rabbitmq", "session-db"]:
+                    continue
+                column_name = "{}-{}_{}".format(target[0], target_name, metric_name)
+                data_df[column_name] = np.array(metric["values"], dtype=np.float64)[:, 1][-PLOTS_NUM:]
     data_df = data_df.round(4)
     data_df = data_df.interpolate(method="spline", order=3, limit_direction="both")
     return data_df, raw_data['mappings'].to_dict()
