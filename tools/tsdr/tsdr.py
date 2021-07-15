@@ -325,7 +325,7 @@ def read_metrics_json(data_file):
                     data_df[column_name] = np.array(metric["values"], dtype=np.float64)[:, 1][-PLOTS_NUM:]
     data_df = data_df.round(4)
     data_df = data_df.interpolate(method="spline", order=3, limit_direction="both")
-    return data_df
+    return data_df, raw_data['mappings'].to_dict()
 
 
 def prepare_services_list(data_df):
@@ -364,12 +364,15 @@ def main():
                         help="number of metrics (for experiment)",
                         type=int, default=None)
     parser.add_argument("--out", help="output path", type=str)
-    parser.add_argument("--results-dir", 
+    parser.add_argument("--results-dir",
                         help="output directory",
-                        type=bool, default=False)
+                        action='store_true')
+    parser.add_argument("--include-raw-data",
+                        help="include time series to results",
+                        action='store_true')
     args = parser.parse_args()
 
-    data_df = read_metrics_json(args.datafile)
+    data_df, mappings = read_metrics_json(args.datafile)
     services = prepare_services_list(data_df)
 
     metrics_dimension = aggregate_dimension(data_df)
@@ -396,6 +399,9 @@ def main():
     summary["metrics_dimension"] = metrics_dimension
     summary["reduced_metrics"] = list(reduced_df.columns)
     summary["clustering_info"] = clustering_info
+    summary["components_mappings"] = mappings
+    if args.include_raw_data:
+        summary["reduced_metrics_raw_data"] = reduced_df.to_dict()
 
     if args.results_dir:
         file_name = "{}_{}.json".format(
