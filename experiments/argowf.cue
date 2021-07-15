@@ -4,19 +4,21 @@ import "strings"
 
 #appLabels: ["user","user-db","shipping","carts","carts-db","orders","orders-db","catalogue","catalogue-db","payment","front-end"]
 
+#promProbeInputs: {
+	endpoint: "http://prometheus.monitoring.svc.cluster.local:9090"
+	query: """
+	sum(rate(request_duration_seconds_count{name='front-end',status_code=~'2..',route!='metrics'}[1m])) * 100
+	"""
+	comparator: {
+		criteria: ">="
+		value: "9000" // 9k qps
+	}
+}
+
 #probe: [{
 	name: "check-front-end-qps"
 	type: "promProbe"
-	"promProbe/inputs": {
-		endpoint: "http://prometheus.monitoring.svc.cluster.local:9090"
-		query: """
-		sum(rate(request_duration_seconds_count{name='front-end',status_code=~'2..',route!='metrics'}[1m])) * 100
-		"""
-		comparator: {
-			criteria: ">="
-			value: "9000" // 9k qps
-		}
-	}
+	"promProbe/inputs": #promProbeInputs
 	mode: "SOT"
 	runProperties: {
 		probeTimeout: 5
