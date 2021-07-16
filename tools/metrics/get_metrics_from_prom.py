@@ -46,7 +46,8 @@ COMPONENT_LABELS = {
     "shipping", "user", "user-db", "payment", "catalogue", "catalogue-db",
     "queue-master", "rabbitmq", "session-db",
 }
-APP_LABEL = "sock-shop"
+APP_LABEL = 'sock-shop'
+APP_NODEPOOL = 'default-pool'
 STEP = 15
 NAN = 'nan'
 GRAFANA_DASHBOARD = "d/3cHU4RSMk/sock-shop-performance"
@@ -385,8 +386,8 @@ def main():
                                     'job=~"kubernetes-cadvisor"')
     # add container=POD for network metrics
     # exclude metrics of argo workflow pods by removing metrics that 'instance' is gke control-pool node.
-    container_selector = 'namespace="sock-shop",container=~"{}|POD",instance!~"gke-microservices-experi-control-pool-.+"'.format(
-                         '|'.join(COMPONENT_LABELS))
+    comp_list = '|'.join(COMPONENT_LABELS)
+    container_selector = f"namespace='sock-shop',container=~'{comp_list}|POD',nodepool='{APP_NODEPOOL}'"
     container_metrics = get_metrics(args.prometheus_url, container_targets,
                                     start, end, args.step, container_selector)
 
@@ -397,7 +398,7 @@ def main():
                               start, end, args.step, pod_selector)
 
     # get node metrics (node-exporter)
-    node_selector = 'job="monitoring/"'
+    node_selector = f"job='monitoring/node-exporter/',node=~'.+-{APP_NODEPOOL}-.+'"
     node_targets = get_targets(args.prometheus_url, node_selector)
     node_metrics = get_metrics(args.prometheus_url, node_targets,
                                start, end, args.step, node_selector)

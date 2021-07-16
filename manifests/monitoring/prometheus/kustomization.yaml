@@ -9,5 +9,8 @@ resources:
 - ./prometheus-exporter-kube-state-dep.yaml
 - ./prometheus-exporter-kube-state-svc.yaml
 - ./prometheus-dep.yaml
-- ./prometheus-configmap.yaml
 - ./prometheus-svc.yaml
+configMapGenerator:
+- name: prometheus-config
+  files:
+  - prometheus.yaml
