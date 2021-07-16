@@ -18,6 +18,9 @@ scrape_configs:
     relabel_configs:
     - action: labelmap
       regex: __meta_kubernetes_node_label_(.+)
+    - action: labelmap
+      regex: __meta_kubernetes_node_label_cloud_google_com_gke_nodepool
+      replacement: nodepool
 
   - job_name: 'kubernetes-cadvisor'
     scheme: https
