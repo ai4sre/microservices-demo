@@ -7,11 +7,11 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: node-exporter
+      name: node-exporter
   template:
     metadata:
       labels:
-        app: node-exporter
+        name: node-exporter
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '9100'
