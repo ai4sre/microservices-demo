@@ -20,7 +20,6 @@ run-trial: lint
 .PHONY: run-only-anomaly
 run-only-anomaly: lint
 	$(CUE_EXPORT) | $(ARGO_SUBMIT) --watch - --parameter-file argowf-only-anomaly.params.yaml || exit 1
-	$(ARGO_LATEST_DELETE)
 
 .PHONY: print-yaml
 print-yaml:
