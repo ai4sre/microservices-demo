@@ -71,12 +71,6 @@ import "strings"
 				name:  "NETWORK_INTERFACE"
 				value: "eth0"
 			}, {
-				name: "CONTAINER_RUNTIME"
-				value: "containerd"
-			}, {
-				name: "SOCKET_PATH"
-				value: "/run/containerd/containerd.sock"
-			}, {
 				name: "NETWORK_PACKET_LOSS_PERCENTAGE"
 				value: "60"
 			}, {
@@ -95,12 +89,6 @@ import "strings"
 			}, {
 				name:  "NETWORK_INTERFACE"
 				value: "eth0"
-			}, {
-				name: "CONTAINER_RUNTIME"
-				value: "containerd"
-			}, {
-				name: "SOCKET_PATH"
-				value: "/run/containerd/containerd.sock"
 			}, {
 				name: "NETWORK_LATENCY"
 				value: "2000"
