@@ -56,6 +56,8 @@ SERVICE_CONTAINERS = {
     "orders": ["orders", "orders-db"]
 }
 
+ROOT_METRIC_NODE = "s-front-end_latency"
+
 
 def read_data_file(tsdr_result_file):
     tsdr_result = json.load(open(tsdr_result_file))
@@ -234,7 +236,7 @@ def build_causal_graph(dm, labels, init_g):
     remove_nodes = []
     undirected_G = G.to_undirected()
     for node in G.nodes():
-        if not nx.has_path(undirected_G, node, "s-front-end_latency"):
+        if not nx.has_path(undirected_G, node, ROOT_METRIC_NODE):
             remove_nodes.append(node)
             continue
         if re.match("^s-", node):
@@ -258,6 +260,9 @@ def main():
 
     reduced_df, metrics_dimension, clustering_info, mappings = \
         read_data_file(args.tsdr_resultfile)
+    if ROOT_METRIC_NODE not in reduced_df.columns:
+        raise Exception(f"{args.tsdr_resultfile} has no root metric node: {ROOT_METRIC_NODE}")
+
     labels = {}
     for i in range(len(reduced_df.columns)):
         labels[i] = reduced_df.columns[i]
