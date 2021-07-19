@@ -63,12 +63,14 @@ def read_data_file(tsdr_result_file):
         tsdr_result['reduced_metrics_raw_data'])
 
     # Filter by specified target metrics
-    for target, metrics in TARGET_DATA.items():
+    target_metrics = []
+    for metrics in TARGET_DATA.values():
         if not metrics:
             continue
-        filtered_metrics = '|'.join(metrics)
-        # Match like 's-front-end_latency'
-        reduced_df = reduced_df.filter(regex=f"_{filtered_metrics}$", axis=0)
+        target_metrics.extend(metrics)
+    filtered_metrics = '|'.join(target_metrics)
+    # Match like 's-front-end_latency'
+    reduced_df.filter(regex=f"_{filtered_metrics}$", axis=0)
 
     return reduced_df, tsdr_result['metrics_dimension'], \
         tsdr_result['clustering_info'], tsdr_result['components_mappings']
