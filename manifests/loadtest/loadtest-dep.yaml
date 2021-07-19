@@ -25,7 +25,7 @@ spec:
       - name: load-test
         image: locustio/locust:1.6.0
         command: ["/bin/sh"]
-        args: ["-c", "while true; do locust --host http://front-end.sock-shop.svc.cluster.local -f /config/locustfile.py --headless --users 20 --spawn-rate 5 --run-time 30s --only-summary; done"]
+        args: ["-c", "while true; do locust --host http://front-end.sock-shop.svc.cluster.local -f /config/locustfile.py --headless --users 10 --spawn-rate 5 --run-time 30s --only-summary; done"]
         volumeMounts:
           - name: locustfile-volume
             mountPath: /config
