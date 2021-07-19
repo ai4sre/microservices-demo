@@ -65,16 +65,25 @@ def read_data_file(tsdr_result_file):
         tsdr_result['reduced_metrics_raw_data'])
 
     # Filter by specified target metrics
-    target_metrics = []
-    for metrics in TARGET_DATA.values():
-        if not metrics:
-            continue
-        target_metrics.extend(metrics)
-    filtered_metrics = '|'.join(target_metrics)
-    # Match like 's-front-end_latency'
-    reduced_df.filter(regex=f"_{filtered_metrics}$", axis=0)
+    if 'containers' in TARGET_DATA:
+        metrics = TARGET_DATA['containers']
+        containers_df = reduced_df.filter(
+            regex=f"^c-.+({'|'.join(metrics)})$")
+    if 'services' in TARGET_DATA:
+        metrics = TARGET_DATA['services']
+        services_df = reduced_df.filter(
+            regex=f"^s-.+({'|'.join(metrics)})$")
+    if 'nodes' in TARGET_DATA:
+        metrics = TARGET_DATA['nodes']
+        nodes_df = reduced_df.filter(
+            regex=f"^n-.+({'|'.join(metrics)})$")
+    if 'middlewares' in TARGET_DATA:
+        metrics = TARGET_DATA['middlewares']
+        middlewares_df = reduced_df.filter(
+            regex=f"^m-.+({'|'.join(metrics)})$")
 
-    return reduced_df, tsdr_result['metrics_dimension'], \
+    df = pd.concat([containers_df, services_df, nodes_df], axis=1)
+    return df, tsdr_result['metrics_dimension'], \
         tsdr_result['clustering_info'], tsdr_result['components_mappings']
 
 
