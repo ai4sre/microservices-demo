@@ -74,75 +74,11 @@ def read_data_file(tsdr_result_file):
         tsdr_result['clustering_info'], tsdr_result['components_mappings']
 
 
-def prepare_init_graph(reduced_df, no_paths):
-    dm = reduced_df.values
-    print("Shape of data matrix: {}".format(dm.shape))
-    init_g = nx.Graph()
-    node_ids = range(len(reduced_df.columns))
-    init_g.add_nodes_from(node_ids)
-    for (i, j) in combinations(node_ids, 2):
-        init_g.add_edge(i, j)
-    print("Number of edges in complete graph : {}".format(init_g.number_of_edges()))
-    for no_path in no_paths:
-        init_g.remove_edge(no_path[0], no_path[1])
-    print("Number of edges in init graph : {}".format(init_g.number_of_edges()))
-    return init_g
-
-
-def build_causal_graph(dm, labels, init_g):
-    """
-    Build causal graph with PC algorithm.
-    """
-    cm = np.corrcoef(dm.T)
-    (G, sep_set) = pcalg.estimate_skeleton(indep_test_func=ci_test_fisher_z,
-                                 data_matrix=dm,
-                                 alpha=SIGNIFICANCE_LEVEL,
-                                 corr_matrix=cm,
-                                 init_graph=init_g)
-    G = pcalg.estimate_cpdag(skel_graph=G, sep_set=sep_set)
-
-    G = nx.relabel_nodes(G, labels)
-
-    # Exclude nodes that have no path to "s-front-end_latency" for visualization
-    remove_nodes = []
-    undirected_G = G.to_undirected()
-    for node in G.nodes():
-        if not nx.has_path(undirected_G, node, "s-front-end_latency"):
-            remove_nodes.append(node)
-            continue
-        if re.match("^s-", node):
-            color = "red"
-        elif re.match("^c-", node):
-            color = "blue"
-        elif re.match("^m-", node):
-            color = "purple"
-        else:
-            color = "green"
-        G.nodes[node]["color"] = color
-    G.remove_nodes_from(remove_nodes)
-    print("Number of nodes: {}".format(G.number_of_nodes()))
-    return G
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("tsdr_resultfile", help="results file of tsdr")
-    args = parser.parse_args()
-
-    reduced_df, metrics_dimension, clustering_info, mappings = \
-        read_data_file(args.tsdr_resultfile)
-    labels = {}
-    for i in range(len(reduced_df.columns)):
-        labels[i] = reduced_df.columns[i]
-
+def build_no_paths(labels, mappings):
     containers_list, services_list, nodes_list = [], [], []
     for v in labels.values():
         if re.match("^c-", v):
             container_name = v.split("_")[0].replace("c-", "")
-            #
-            if container_name == "nsenter":
-                continue
-            #
             if container_name not in containers_list:
                 containers_list.append(container_name)
         elif re.match("^s-", v):
@@ -229,6 +165,8 @@ def main():
         for con, host_node in nodes_containers.items():
             if node != host_node:
                 for n1 in nodes_metrics[node]:
+                    if con not in containers_metrics:
+                        continue
                     for c2 in containers_metrics[con]:
                         no_paths.append([n1, c2])
     print("[C-N] No paths: {}".format(len(no_paths)))
@@ -241,6 +179,8 @@ def main():
                 host_list.append(nodes_containers[con])
         for node in nodes_list:
             if node not in host_list:
+                if service not in services_metrics:
+                    continue
                 for s1 in services_metrics[service]:
                     for n2 in nodes_metrics[node]:
                         no_paths.append([s1, n2])
@@ -256,10 +196,72 @@ def main():
                     for c2 in containers_metrics[con]:
                         no_paths.append([s1, c2])
     print("[C-S] No paths: {}".format(len(no_paths)))
+    return no_paths
 
+
+def prepare_init_graph(reduced_df, no_paths):
+    dm = reduced_df.values
+    print("Shape of data matrix: {}".format(dm.shape))
+    init_g = nx.Graph()
+    node_ids = range(len(reduced_df.columns))
+    init_g.add_nodes_from(node_ids)
+    for (i, j) in combinations(node_ids, 2):
+        init_g.add_edge(i, j)
+    print("Number of edges in complete graph : {}".format(init_g.number_of_edges()))
+    for no_path in no_paths:
+        init_g.remove_edge(no_path[0], no_path[1])
+    print("Number of edges in init graph : {}".format(init_g.number_of_edges()))
+    return init_g
+
+
+def build_causal_graph(dm, labels, init_g):
+    """
+    Build causal graph with PC algorithm.
+    """
+    cm = np.corrcoef(dm.T)
+    (G, sep_set) = pcalg.estimate_skeleton(indep_test_func=ci_test_fisher_z,
+                                 data_matrix=dm,
+                                 alpha=SIGNIFICANCE_LEVEL,
+                                 corr_matrix=cm,
+                                 init_graph=init_g)
+    G = pcalg.estimate_cpdag(skel_graph=G, sep_set=sep_set)
+
+    G = nx.relabel_nodes(G, labels)
+
+    # Exclude nodes that have no path to "s-front-end_latency" for visualization
+    remove_nodes = []
+    undirected_G = G.to_undirected()
+    for node in G.nodes():
+        if not nx.has_path(undirected_G, node, "s-front-end_latency"):
+            remove_nodes.append(node)
+            continue
+        if re.match("^s-", node):
+            color = "red"
+        elif re.match("^c-", node):
+            color = "blue"
+        elif re.match("^m-", node):
+            color = "purple"
+        else:
+            color = "green"
+        G.nodes[node]["color"] = color
+    G.remove_nodes_from(remove_nodes)
+    print("Number of nodes: {}".format(G.number_of_nodes()))
+    return G
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("tsdr_resultfile", help="results file of tsdr")
+    args = parser.parse_args()
+
+    reduced_df, metrics_dimension, clustering_info, mappings = \
+        read_data_file(args.tsdr_resultfile)
+    labels = {}
+    for i in range(len(reduced_df.columns)):
+        labels[i] = reduced_df.columns[i]
+    no_paths = build_no_paths(labels, mappings)
     init_g = prepare_init_graph(reduced_df, no_paths)
     g = build_causal_graph(reduced_df.values, labels, init_g)
-
     agraph = nx.nx_agraph.to_agraph(g).draw(prog='sfdp', format='png')
     Image(agraph)
 
