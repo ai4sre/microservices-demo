@@ -3,6 +3,7 @@
 import argparse
 import json
 import re
+import sys
 from itertools import combinations
 
 import networkx as nx
@@ -275,8 +276,11 @@ def main():
     labels = {}
     for i in range(len(reduced_df.columns)):
         labels[i] = reduced_df.columns[i]
+    print("--> Building no paths", file=sys.stderr)
     no_paths = build_no_paths(labels, mappings)
+    print("--> Preparing initial graph", file=sys.stderr)
     init_g = prepare_init_graph(reduced_df, no_paths)
+    print("--> Building causal graph", file=sys.stderr)
     g = build_causal_graph(reduced_df.values, labels, init_g)
     agraph = nx.nx_agraph.to_agraph(g).draw(prog='sfdp', format='png')
     Image(agraph)
