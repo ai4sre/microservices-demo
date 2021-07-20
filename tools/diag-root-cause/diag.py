@@ -2,10 +2,12 @@
 
 import argparse
 import json
+import os
 import re
 import sys
 from itertools import combinations
 
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -275,6 +277,8 @@ def main():
     parser.add_argument("--pc-stable",
                         action='store_true',
                         help='whether to use stable method of PC-algorithm')
+    parser.add_argument("--out-dir",
+                        help='output directory for saving graph image and metadata from tsdr')
     args = parser.parse_args()
 
     reduced_df, metrics_dimension, clustering_info, mappings = \
@@ -292,8 +296,16 @@ def main():
     print("--> Building causal graph", file=sys.stderr)
     g = build_causal_graph(
         reduced_df.values, labels, init_g, args.citest_alpha, args.pc_stable)
-    agraph = nx.nx_agraph.to_agraph(g).draw(prog='sfdp', format='png')
-    Image(agraph)
+
+    agraph = nx.nx_agraph.to_agraph(g)
+    img = agraph.draw(prog='sfdp', format='png')
+    if args.out_dir is None:
+        Image(img)
+    else:
+        id = os.path.splitext(os.path.basename(args.tsdr_resultfile))[0]
+        imgfile = os.path.join(args.out_dir, id) + '.png'
+        plt.savefig(imgfile)
+        print(f"Saved the file of causal graph image to {imgfile}", file=sys.stderr)
 
 
 if __name__ == '__main__':
