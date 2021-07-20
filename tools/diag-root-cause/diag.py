@@ -234,10 +234,10 @@ def build_causal_graph(dm, labels, init_g):
     """
     cm = np.corrcoef(dm.T)
     (G, sep_set) = pcalg.estimate_skeleton(indep_test_func=ci_test_fisher_z,
-                                 data_matrix=dm,
-                                 alpha=SIGNIFICANCE_LEVEL,
-                                 corr_matrix=cm,
-                                 init_graph=init_g)
+                                           data_matrix=dm,
+                                           alpha=SIGNIFICANCE_LEVEL,
+                                           corr_matrix=cm,
+                                           init_graph=init_g)
     G = pcalg.estimate_cpdag(skel_graph=G, sep_set=sep_set)
 
     G = nx.relabel_nodes(G, labels)
