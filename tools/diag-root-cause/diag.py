@@ -228,16 +228,18 @@ def prepare_init_graph(reduced_df, no_paths):
     return init_g
 
 
-def build_causal_graph(dm, labels, init_g, alpha):
+def build_causal_graph(dm, labels, init_g, alpha, pc_stable):
     """
     Build causal graph with PC algorithm.
     """
     cm = np.corrcoef(dm.T)
+    pc_method = 'stable' if pc_stable else None
     (G, sep_set) = pcalg.estimate_skeleton(indep_test_func=ci_test_fisher_z,
                                            data_matrix=dm,
                                            alpha=alpha,
                                            corr_matrix=cm,
-                                           init_graph=init_g)
+                                           init_graph=init_g,
+                                           method=pc_method)
     G = pcalg.estimate_cpdag(skel_graph=G, sep_set=sep_set)
 
     G = nx.relabel_nodes(G, labels)
@@ -270,6 +272,9 @@ def main():
                         default=SIGNIFICANCE_LEVEL,
                         type=int,
                         help="alpha value of independence test for building causality graph")
+    parser.add_argument("--pc-stable",
+                        action='store_true',
+                        help='whether to use stable method of PC-algorithm')
     args = parser.parse_args()
 
     reduced_df, metrics_dimension, clustering_info, mappings = \
@@ -286,7 +291,7 @@ def main():
     init_g = prepare_init_graph(reduced_df, no_paths)
     print("--> Building causal graph", file=sys.stderr)
     g = build_causal_graph(
-        reduced_df.values, labels, init_g, args.citest_alpha)
+        reduced_df.values, labels, init_g, args.citest_alpha, args.pc_stable)
     agraph = nx.nx_agraph.to_agraph(g).draw(prog='sfdp', format='png')
     Image(agraph)
 
