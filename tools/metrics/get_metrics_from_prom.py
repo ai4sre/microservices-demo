@@ -398,7 +398,7 @@ def main():
                               start, end, args.step, pod_selector)
 
     # get node metrics (node-exporter)
-    node_selector = f"job='monitoring/node-exporter/',node=~'.+-{APP_NODEPOOL}-.+'"
+    node_selector = f"job='monitoring/node-exporter',node=~'.+-{APP_NODEPOOL}-.+'"
     node_targets = get_targets(args.prometheus_url, node_selector)
     node_metrics = get_metrics(args.prometheus_url, node_targets,
                                start, end, args.step, node_selector)
