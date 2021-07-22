@@ -1,11 +1,11 @@
 import base64
 from random import choice
 
-from locust import HttpUser, between, task
+from locust import HttpUser, constant, task
 
 
 class SockShopLoadTest(HttpUser):
-    wait_time = between(0, 0)
+    wait_time = constant(0.8)
 
     @task
     def load(self):

@@ -25,7 +25,8 @@ spec:
       - name: load-test
         image: locustio/locust:1.6.0
         command: ["/bin/sh"]
-        args: ["-c", "while true; do locust --host http://front-end.sock-shop.svc.cluster.local -f /config/locustfile.py --headless --users 10 --spawn-rate 5 --run-time 30s --only-summary; done"]
+        # locust log: 'Your selected spawn rate is very high (>100), and this is known to sometimes cause issues. Do you really need to ramp up that fast?'
+        args: ["-c", "while true; do locust --host http://front-end.sock-shop.svc.cluster.local -f /config/locustfile.py --headless --users 5 --spawn-rate 5 --run-time 30s --only-summary; done"]
         volumeMounts:
           - name: locustfile-volume
             mountPath: /config
