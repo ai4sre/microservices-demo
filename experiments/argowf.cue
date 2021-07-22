@@ -292,7 +292,7 @@ spec: {
 				}]
 				artifacts: [{
 					name: "metricsFile"
-					from: "{{steps.get-metrics.outputs.artifacts.metrics-artifacts-raw}}"
+					from: "{{steps.get-metrics.outputs.artifacts.metrics-artifacts-gcs}}"
 				}]
 			}
 			withItems: ["tsifter", "sieve"]
@@ -349,9 +349,6 @@ spec: {
 					bucket: "{{ workflow.parameters.gcsBucket }}"
 					key: #gcsMetricsFilePath
 				}
-			}, {
-				name: "metrics-artifacts-raw"
-				path: #metricsPath
 			}]
 			parameters: [{
 				name: "metrics-file-path"
@@ -396,6 +393,10 @@ spec: {
 			artifacts: [ {
 				name: "metricsFile"
 				path: "/tmp/metrics.json"
+				gcs: {
+					bucket: "{{ workflow.parameters.gcsBucket }}"
+					key: "{{inputs.parameters.gcsMetricsFilePath}}"
+				}
 			} ]
 		}
 		#result_file_name: """
@@ -417,7 +418,7 @@ spec: {
 			gcs: {
 				bucket: "{{workflow.parameters.gcsBucket}}"
 				key: """
-				results/{{=sprig.trimSuffix('.tgz', {{gcsMetricsFilePath}})}}/\( #result_file_name + ".tgz" )
+				results/{{=sprig.trimSuffix('.tgz', {{inputs.parameters.gcsMetricsFilePath}})}}/\( #result_file_name + ".tgz" )
 				"""
 			}
 		}]
