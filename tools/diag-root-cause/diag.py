@@ -5,6 +5,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime
 from itertools import combinations
 
 import matplotlib.pyplot as plt
@@ -303,7 +304,11 @@ def main():
         Image(img)
     else:
         id = os.path.splitext(os.path.basename(args.tsdr_resultfile))[0]
-        imgfile = os.path.join(args.out_dir, id) + '.png'
+        out_dir = os.path.join(args.out_dir, id)
+        if not os.path.isdir(out_dir):
+            os.makedirs(out_dir)
+        ts = datetime.now().strftime("%Y%m%d%H%M%S")
+        imgfile = os.path.join(out_dir, ts) + '.png'
         plt.savefig(imgfile)
         print(f"Saved the file of causal graph image to {imgfile}", file=sys.stderr)
 
