@@ -418,7 +418,7 @@ spec: {
 			gcs: {
 				bucket: "{{workflow.parameters.gcsBucket}}"
 				key: """
-				results/{{=sprig.trimSuffix('.tgz', {{inputs.parameters.gcsMetricsFilePath}})}}/\( #result_file_name + ".tgz" )
+				results/{{=sprig.trimSuffix('.tgz', inputs.parameters.gcsMetricsFilePath)}}/\( #result_file_name + ".tgz" )
 				"""
 			}
 		}]
