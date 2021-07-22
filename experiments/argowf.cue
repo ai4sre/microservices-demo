@@ -279,7 +279,24 @@ spec: {
 				name:  "chaosResultName"
 				value: #chaosResultName
 			}]
-		}],
+		}], [{
+			name: "run-tsdr"
+			template: "run-tsdr"
+			arguments: {
+				parameters: [{
+					name: "tsdrMethod"
+					value: "{{item}}"
+				}, {
+					name: "gcsMetricsFilePath"
+					value: "{{steps.get-metrics.outputs.parameters.metrics-file-path}}"
+				}]
+				artifacts: [{
+					name: "metricsFile"
+					from: "{{steps.get-metrics.outputs.artifacts.metrics-artifacts-gcs}}"
+				}]
+			}
+			withItems: ["tsifter", "sieve"]
+		}]
 		]
 	}, {
 		// return <injection started time> + <chaos duration>
@@ -306,6 +323,7 @@ spec: {
 		}, {
 			name: "endTimestamp"
 		}]
+		#metricsPath: "/tmp/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}-{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json",
 		container: {
 			image: "ghcr.io/ai4sre/metrics-tools:latest"
 			imagePullPolicy: "Always"
@@ -317,20 +335,26 @@ spec: {
 				"--end",
 				"{{inputs.parameters.endTimestamp}}",
 				"--out",
-				"/tmp/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}-{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json",
+				#metricsPath,
 			]
 		}
-		outputs: artifacts: [{
-			name: "metrics-artifacts"
-			path: "/tmp/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}-{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json"
-			gcs: {
-				bucket: "{{ workflow.parameters.gcsBucket }}"
-				// see https://github.com/argoproj/argo-workflows/blob/510b4a816dbb2d33f37510db1fd92b841c4d14d3/docs/workflow-controller-configmap.yaml#L93-L106
-				key: """
-				metrics/{{workflow.creationTimestamp.Y}}/{{workflow.creationTimestamp.m}}/{{workflow.creationTimestamp.d}}/{{workflow.name}}/{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json.tgz
-				"""
-			}
-		}]
+		outputs: {
+			#gcsMetricsFilePath: """
+			metrics/{{workflow.creationTimestamp.Y}}/{{workflow.creationTimestamp.m}}/{{workflow.creationTimestamp.d}}/{{workflow.name}}/{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json.tgz
+			"""
+			artifacts: [{
+				name: "metrics-artifacts-gcs"
+				path: #metricsPath
+				gcs: {
+					bucket: "{{ workflow.parameters.gcsBucket }}"
+					key: #gcsMetricsFilePath
+				}
+			}]
+			parameters: [{
+				name: "metrics-file-path"
+				value: #gcsMetricsFilePath
+			}]
+		}
 	}, {
 		name: "restart-pod"
 		inputs: parameters: [{
@@ -357,6 +381,47 @@ spec: {
 			true
 			"""]
 		}
+	}, {
+		// Note the following duplicate code in argowf-analytics.cue. 
+		name: "run-tsdr"
+		inputs: {
+			parameters: [{
+				name: "tsdrMethod"
+			}, {
+				name: "gcsMetricsFilePath"
+			}]
+			artifacts: [ {
+				name: "metricsFile"
+				path: "/tmp/metrics.json"
+				gcs: {
+					bucket: "{{ workflow.parameters.gcsBucket }}"
+					key: "{{inputs.parameters.gcsMetricsFilePath}}"
+				}
+			} ]
+		}
+		#result_file_name: """
+		{{inputs.parameters.tsdrMethod}}-{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}.json
+		"""
+		container: {
+			image: "ghcr.io/ai4sre/tsdr-tools:latest"
+			imagePullPolicy: "Always"
+			command: ["/usr/src/app/tsdr.py"]
+			args: [ "--method", "{{inputs.parameters.tsdrMethod}}",
+					"--max-workers", "2",
+					"--include-raw-data",
+					"--out", "/tmp/\(#result_file_name)", 
+					"/tmp/metrics.json"]
+		}
+		outputs: artifacts: [{
+			name: "tsdr-outputs"
+			path: "/tmp/\(#result_file_name)"
+			gcs: {
+				bucket: "{{workflow.parameters.gcsBucket}}"
+				key: """
+				results/{{=sprig.trimSuffix('.tgz', inputs.parameters.gcsMetricsFilePath)}}/\( #result_file_name + ".tgz" )
+				"""
+			}
+		}]
 	}, {
 		name: "sleep-n-sec"
 		inputs: parameters: [{

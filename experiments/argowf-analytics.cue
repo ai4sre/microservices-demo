@@ -95,6 +95,7 @@ spec: {
 			withSequence: count: "{{inputs.parameters.repeatNum}}"
 		}] ]
 	}, {
+		// Note the following duplicate code in argowf.cue. 
 		name: "run-tsdr"
 		inputs: {
 			parameters: [{
