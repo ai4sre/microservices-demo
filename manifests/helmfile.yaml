@@ -9,6 +9,9 @@ releases:
     namespace: litmus
     chart: litmuschaos/litmus
     version: ~1.15.0
+    values:
+      - nodeSelector:
+          cloud.google.com/gke-nodepool: control-pool
   - name: argo-workflows
     namespace: argo
     chart: argoproj/argo-workflows
@@ -16,11 +19,17 @@ releases:
     # https://github.com/argoproj/argo-helm/blob/34e606f012ee81034037ce321dbba989c9c06b16/charts/argo-workflows/values.yaml#L40
     values:
       - controller:
+          nodeSelector:
+            cloud.google.com/gke-nodepool: control-pool
           image:
             tag: "v3.1.1"
       - executor:
+          nodeSelector:
+            cloud.google.com/gke-nodepool: control-pool
           image:
             tag: "v3.1.1"
       - server:
+          nodeSelector:
+            cloud.google.com/gke-nodepool: control-pool
           image:
             tag: "v3.1.1"
