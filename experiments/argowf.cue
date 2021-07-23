@@ -203,13 +203,6 @@ spec: {
 				value: "{{inputs.parameters.appLabel}}"
 			}]
 			withSequence: count: "{{inputs.parameters.repeatNum}}"
-		}, {
-			name:     "sleep"
-			template: "sleep-n-sec"
-			arguments: parameters: [{
-				name:  "seconds"
-				value: "{{workflow.parameters.chaosIntervalSec}}"
-			}]
 		}] ]
 	}, for type, _ in #chaosTypeToExps {
 		#chaosEngineName: "{{inputs.parameters.appLabel}}-\( type )-{{inputs.parameters.jobN}}"
@@ -230,8 +223,7 @@ spec: {
 				name:  "chaosResultName"
 				value: #chaosResultName
 			}]
-		}],
-		[{
+		}], [{
 			name:     "inject-chaos-\( type )"
 			template: "inject-chaos-\( type )"
 			arguments: parameters: [{
@@ -283,13 +275,10 @@ spec: {
 				value: #chaosResultName
 			}]
 		}], [{
-			name: "run-tsdr"
-			template: "run-tsdr"
+			name: "run-tsdr-and-then-sleep"
+			template: "run-tsdr-and-then-sleep"
 			arguments: {
 				parameters: [{
-					name: "tsdrMethod"
-					value: "{{item}}"
-				}, {
 					name: "gcsMetricsFilePath"
 					value: "{{steps.get-metrics.outputs.parameters.metrics-file-path}}"
 				}]
@@ -298,9 +287,43 @@ spec: {
 					from: "{{steps.get-metrics.outputs.artifacts.metrics-artifacts-gcs}}"
 				}]
 			}
+		}] ]
+	}, {
+		name: "run-tsdr-and-then-sleep"
+		parallelism: 2
+		inputs: {
+			parameters: [{
+				name: "gcsMetricsFilePath"
+			}]
+			artifacts: [{
+				name: "metricsFile"
+			}]
+		}
+		steps: [ [{
+			name: "run-tsdr"
+			template: "run-tsdr-by-method"
+			arguments: {
+				parameters: [{
+					name: "tsdrMethod"
+					value: "{{item}}"
+				}, {
+					name: "gcsMetricsFilePath"
+					value: "{{inputs.parameters.gcsMetricsFilePath}}"
+				}]
+				artifacts: [{
+					name: "metricsFile"
+					from: "{{inputs.artifacts.metricsFile}}"
+				}]
+			}
 			withItems: ["tsifter", "sieve"]
-		}]
-		]
+		}], [{
+			name:     "sleep"
+			template: "sleep-n-sec"
+			arguments: parameters: [{
+				name:  "seconds"
+				value: "{{workflow.parameters.chaosIntervalSec}}"
+			}]
+		} ] ]
 	}, {
 		// return <injection started time> + <chaos duration>
 		name: "get-injection-finished-time"
@@ -386,7 +409,7 @@ spec: {
 		}
 	}, {
 		// Note the following duplicate code in argowf-analytics.cue. 
-		name: "run-tsdr"
+		name: "run-tsdr-by-method"
 		inputs: {
 			parameters: [{
 				name: "tsdrMethod"
