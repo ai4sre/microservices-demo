@@ -33,11 +33,11 @@ spec:
           name: rabbitmq
         resources:
           limits:
-            cpu: 200m
-            memory: 500Mi
+            cpu: 100m
+            memory: 200Mi
           requests:
-            cpu: 200m
-            memory: 500Mi
+            cpu: 100m
+            memory: 200Mi
       - name: rabbitmq-exporter
         image: kbudde/rabbitmq-exporter
         ports:
