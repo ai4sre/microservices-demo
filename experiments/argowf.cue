@@ -132,7 +132,6 @@ spec: {
 	nodeSelector: {
 		"cloud.google.com/gke-nodepool": "control-pool"
 	}
-	parallelism: 1
 	arguments: parameters: [{
 		name:  "appNamespace"
 		value: "sock-shop"
@@ -170,6 +169,7 @@ spec: {
 	}]
 	templates: [{
 		name: "argowf-chaos"
+		parallelism: 1
 		steps: [ [ for type, _ in #chaosTypeToExps {
 			name:     "run-chaos-\( type )"
 			template: "repeat-chaos-\( type )"
@@ -192,6 +192,7 @@ spec: {
 		}, {
 			name: "appLabel"
 		}]
+		parallelism: 1
 		steps: [ [{
 			name:     "inject-chaos-\( type )-and-get-metrics"
 			template: "inject-chaos-\( type )-and-get-metrics"
@@ -290,7 +291,38 @@ spec: {
 		}] ]
 	}, {
 		name: "run-tsdr-and-then-sleep"
-		parallelism: 2
+		inputs: {
+			parameters: [{
+				name: "gcsMetricsFilePath"
+			}]
+			artifacts: [{
+				name: "metricsFile"
+			}]
+		}
+		steps: [ [{
+			name: "run-tsdr"
+			template: "run-tsdr-by-all-methods"
+			arguments: {
+				parameters: [{
+					name: "gcsMetricsFilePath"
+					value: "{{inputs.parameters.gcsMetricsFilePath}}"
+				}]
+				artifacts: [{
+					name: "metricsFile"
+					from: "{{inputs.artifacts.metricsFile}}"
+				}]
+			}
+		}, {
+			name:     "sleep"
+			template: "sleep-n-sec"
+			arguments: parameters: [{
+				name:  "seconds"
+				value: "{{workflow.parameters.chaosIntervalSec}}"
+			}]
+		} ] ]
+	}, {
+		name: "run-tsdr-by-all-methods"
+		parallelism: 1
 		inputs: {
 			parameters: [{
 				name: "gcsMetricsFilePath"
@@ -316,14 +348,7 @@ spec: {
 				}]
 			}
 			withItems: ["tsifter", "sieve"]
-		}], [{
-			name:     "sleep"
-			template: "sleep-n-sec"
-			arguments: parameters: [{
-				name:  "seconds"
-				value: "{{workflow.parameters.chaosIntervalSec}}"
-			}]
-		} ] ]
+		}] ]
 	}, {
 		// return <injection started time> + <chaos duration>
 		name: "get-injection-finished-time"
