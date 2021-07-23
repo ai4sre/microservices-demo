@@ -13,7 +13,7 @@ $ gcloud container clusters create sock-shop-01 \
 	--release-channel regular \
 	--cluster-version 1.19.10-gke.1700 \
 	--image-type=cos \
-	--machine-type e2-standard-2 \
+	--machine-type e2-medium \
 	--num-nodes 3 \
 	--workload-pool="${PROJECT_ID}.svc.id.goog" \
 	--workload-metadata=GKE_METADATA \
