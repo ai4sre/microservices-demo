@@ -130,7 +130,6 @@ spec: {
 	entrypoint:         "argowf-chaos"
 	serviceAccountName: "argo-chaos"
 	nodeSelector: {
-		"beta.kubernetes.io/arch": "linux"
 		"cloud.google.com/gke-nodepool": "control-pool"
 	}
 	parallelism: 1
