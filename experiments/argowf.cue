@@ -158,9 +158,6 @@ spec: {
 		name: "chaosTypes"
 		value: strings.Join([for type, _ in #chaosTypeToExps { "'" + type + "'" }], ",")
 	}, {
-		name: "restartPod"
-		value: 1
-	}, {
 		name: "gcsBucket"
 		value: "microservices-demo-artifacts"
 	}, {
@@ -257,14 +254,6 @@ spec: {
 				name: "endTimestamp"
 				value: "{{steps.get-injection-finished-time.outputs.result}}"
 			}]
-		}], [{
-			name: "restart-pod-injected-chaos"
-			template: "restart-pod"
-			arguments: parameters: [{
-				name: "appLabel"
-				value: "{{inputs.parameters.appLabel}}"
-			}]
-			when: "{{workflow.parameters.restartPod}} == 1"
 		}], [{
 			name: "revert-chaosengine"
 			template: "revert-chaosengine"
@@ -405,16 +394,6 @@ spec: {
 				name: "metrics-file-path"
 				value: #gcsMetricsFilePath
 			}]
-		}
-	}, {
-		name: "restart-pod"
-		inputs: parameters: [{
-			name: "appLabel"
-		}]
-		container: {
-			image: "bitnami/kubectl"
-			command: ["sh", "-c"]
-			args: ["kubectl rollout restart deployment/{{inputs.parameters.appLabel}} -n {{workflow.parameters.appNamespace}}; echo sleeping for 60 seconds; sleep 60; echo done"]
 		}
 	}, {
 		name: "revert-chaosengine"

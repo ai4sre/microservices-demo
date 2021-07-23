@@ -7,5 +7,4 @@ appLabels:
   - payment
   - front-end
   - shipping
-restartPod: 0
 chaosTypes: "'pod-network-loss','pod-network-latency'"
