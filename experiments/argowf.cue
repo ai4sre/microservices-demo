@@ -465,6 +465,9 @@ spec: {
 						}
 						chaosServiceAccount: "{{workflow.parameters.chaosServiceAccount}}"
 						jobCleanUpPolicy:    "{{workflow.parameters.litmusJobCleanupPolicy}}"
+						components: runner: nodeSelector: {
+							"cloud.google.com/gke-nodepool": "control-pool"
+						}
 						experiments: exps
 					}
 				}
