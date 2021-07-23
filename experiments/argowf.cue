@@ -11,7 +11,7 @@ import "strings"
 	"""
 	comparator: {
 		criteria: ">="
-		value: "9000" // 9k qps
+		value: "7000" // 7k qps
 	}
 }
 
@@ -129,6 +129,11 @@ metadata: generateName: "argowf-chaos-"
 spec: {
 	entrypoint:         "argowf-chaos"
 	serviceAccountName: "argo-chaos"
+	nodeSelector: {
+		"beta.kubernetes.io/arch": "linux"
+		"cloud.google.com/gke-nodepool": "control-pool"
+	}
+	parallelism: 1
 	arguments: parameters: [{
 		name:  "appNamespace"
 		value: "sock-shop"
@@ -164,7 +169,6 @@ spec: {
 		name: "litmusJobCleanupPolicy"
 		value: "delete" // defaut value in litmus
 	}]
-	parallelism: 1
 	templates: [{
 		name: "argowf-chaos"
 		steps: [ [ for type, _ in #chaosTypeToExps {
