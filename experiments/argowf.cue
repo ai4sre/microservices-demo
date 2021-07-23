@@ -132,7 +132,6 @@ spec: {
 	nodeSelector: {
 		"cloud.google.com/gke-nodepool": "control-pool"
 	}
-	parallelism: 1
 	arguments: parameters: [{
 		name:  "appNamespace"
 		value: "sock-shop"
@@ -170,6 +169,7 @@ spec: {
 	}]
 	templates: [{
 		name: "argowf-chaos"
+		parallelism: 1
 		steps: [ [ for type, _ in #chaosTypeToExps {
 			name:     "run-chaos-\( type )"
 			template: "repeat-chaos-\( type )"
@@ -192,6 +192,7 @@ spec: {
 		}, {
 			name: "appLabel"
 		}]
+		parallelism: 1
 		steps: [ [{
 			name:     "inject-chaos-\( type )-and-get-metrics"
 			template: "inject-chaos-\( type )-and-get-metrics"
@@ -203,13 +204,6 @@ spec: {
 				value: "{{inputs.parameters.appLabel}}"
 			}]
 			withSequence: count: "{{inputs.parameters.repeatNum}}"
-		}, {
-			name:     "sleep"
-			template: "sleep-n-sec"
-			arguments: parameters: [{
-				name:  "seconds"
-				value: "{{workflow.parameters.chaosIntervalSec}}"
-			}]
 		}] ]
 	}, for type, _ in #chaosTypeToExps {
 		#chaosEngineName: "{{inputs.parameters.appLabel}}-\( type )-{{inputs.parameters.jobN}}"
@@ -230,8 +224,7 @@ spec: {
 				name:  "chaosResultName"
 				value: #chaosResultName
 			}]
-		}],
-		[{
+		}], [{
 			name:     "inject-chaos-\( type )"
 			template: "inject-chaos-\( type )"
 			arguments: parameters: [{
@@ -283,13 +276,10 @@ spec: {
 				value: #chaosResultName
 			}]
 		}], [{
-			name: "run-tsdr"
-			template: "run-tsdr"
+			name: "run-tsdr-and-then-sleep"
+			template: "run-tsdr-and-then-sleep"
 			arguments: {
 				parameters: [{
-					name: "tsdrMethod"
-					value: "{{item}}"
-				}, {
 					name: "gcsMetricsFilePath"
 					value: "{{steps.get-metrics.outputs.parameters.metrics-file-path}}"
 				}]
@@ -298,9 +288,67 @@ spec: {
 					from: "{{steps.get-metrics.outputs.artifacts.metrics-artifacts-gcs}}"
 				}]
 			}
+		}] ]
+	}, {
+		name: "run-tsdr-and-then-sleep"
+		inputs: {
+			parameters: [{
+				name: "gcsMetricsFilePath"
+			}]
+			artifacts: [{
+				name: "metricsFile"
+			}]
+		}
+		steps: [ [{
+			name: "run-tsdr"
+			template: "run-tsdr-by-all-methods"
+			arguments: {
+				parameters: [{
+					name: "gcsMetricsFilePath"
+					value: "{{inputs.parameters.gcsMetricsFilePath}}"
+				}]
+				artifacts: [{
+					name: "metricsFile"
+					from: "{{inputs.artifacts.metricsFile}}"
+				}]
+			}
+		}, {
+			name:     "sleep"
+			template: "sleep-n-sec"
+			arguments: parameters: [{
+				name:  "seconds"
+				value: "{{workflow.parameters.chaosIntervalSec}}"
+			}]
+		} ] ]
+	}, {
+		name: "run-tsdr-by-all-methods"
+		parallelism: 1
+		inputs: {
+			parameters: [{
+				name: "gcsMetricsFilePath"
+			}]
+			artifacts: [{
+				name: "metricsFile"
+			}]
+		}
+		steps: [ [{
+			name: "run-tsdr"
+			template: "run-tsdr-by-method"
+			arguments: {
+				parameters: [{
+					name: "tsdrMethod"
+					value: "{{item}}"
+				}, {
+					name: "gcsMetricsFilePath"
+					value: "{{inputs.parameters.gcsMetricsFilePath}}"
+				}]
+				artifacts: [{
+					name: "metricsFile"
+					from: "{{inputs.artifacts.metricsFile}}"
+				}]
+			}
 			withItems: ["tsifter", "sieve"]
-		}]
-		]
+		}] ]
 	}, {
 		// return <injection started time> + <chaos duration>
 		name: "get-injection-finished-time"
@@ -386,7 +434,10 @@ spec: {
 		}
 	}, {
 		// Note the following duplicate code in argowf-analytics.cue. 
-		name: "run-tsdr"
+		name: "run-tsdr-by-method"
+		nodeSelector: {
+			"cloud.google.com/gke-nodepool": "analytics-pool"
+		}
 		inputs: {
 			parameters: [{
 				name: "tsdrMethod"

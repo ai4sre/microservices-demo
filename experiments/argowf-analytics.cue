@@ -4,6 +4,7 @@ metadata: generateName: "argowf-analytics-"
 spec: {
 	entrypoint:         "argowf-analytics"
 	serviceAccountName: "argo-chaos"
+	nodeSelector: "cloud.google.com/gke-nodepool": "analytics-pool"
 	arguments: parameters: [{
 		name: "gcsBucket"
 		value: "microservices-demo-artifacts"
@@ -16,17 +17,10 @@ spec: {
 	}, {
 		name: "tsdrMethod"
 		value: "tsifter"
-	}, {
-		name: "gkeNodePool"
-		value: "analytics-pool"
-	} ]
+	}]
 	parallelism: 1
 	templates: [{
 		name: "argowf-analytics"
-		nodeSelector: {
-			"beta.kubernetes.io/arch": "linux"
-			"cloud.google.com/gke-nodepool": "{{workflow.parameters.gkeNodePool}}"
-		}
 		steps: [ [ {
 			name: "list-files"
 			template: "list-metrics-files"
