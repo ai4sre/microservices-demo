@@ -410,6 +410,9 @@ spec: {
 	}, {
 		// Note the following duplicate code in argowf-analytics.cue. 
 		name: "run-tsdr-by-method"
+		nodeSelector: {
+			"cloud.google.com/gke-nodepool": "analytics-pool"
+		}
 		inputs: {
 			parameters: [{
 				name: "tsdrMethod"
