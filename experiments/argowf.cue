@@ -11,7 +11,7 @@ import "strings"
 	"""
 	comparator: {
 		criteria: ">="
-		value: "7000" // 7k qps
+		value: "6000" // 6k qps
 	}
 }
 
