@@ -1,4 +1,4 @@
-ARGO_MANIFEST_CUE=argowf.cue
+ARGO_MANIFEST_CUE=argowf-chaos.cue
 CUE_EXPORT=cue eval --out yaml $(ARGO_MANIFEST_CUE)
 ARGO_ANLYS_MANIFEST_CUE=argowf-analytics.cue
 CUE_ANLYS_EXPORT=cue eval --out yaml $(ARGO_ANLYS_MANIFEST_CUE)
