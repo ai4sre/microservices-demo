@@ -1,7 +1,8 @@
 ARGO_MANIFEST_CUE=argowf-chaos.cue
-CUE_CHAOS_EXPORT=cue eval --out yaml $(ARGO_MANIFEST_CUE)
+CUE_EVAL=cue eval --out yaml
+CUE_CHAOS_EXPORT=$(CUE_EVAL) $(ARGO_MANIFEST_CUE)
 ARGO_ANLYS_MANIFEST_CUE=argowf-analytics.cue
-CUE_ANLYS_EXPORT=cue eval --out yaml $(ARGO_ANLYS_MANIFEST_CUE)
+CUE_ANLYS_EXPORT=$(CUE_EVAL) $(ARGO_ANLYS_MANIFEST_CUE)
 ARGO_NAMESPACE=litmus
 ARGO_SUBMIT=argo submit -n $(ARGO_NAMESPACE)
 ARGO_LATEST_DELETE=argo delete -n $(ARGO_NAMESPACE) @latest
@@ -14,12 +15,12 @@ chaos/run: chaos/lint
 # for checking the manifest of argo workflow
 .PHONY: chaos/run-trial
 chaos/run-trial: chaos/lint
-	$(CUE_CHAPS_EXPORT) | $(ARGO_SUBMIT) --watch - --parameter-file argowf-trial.params.yaml || exit 1
+	$(CUE_CHAOS_EXPORT) | $(ARGO_SUBMIT) --watch - --parameter-file argowf-trial.params.yaml || exit 1
 	$(ARGO_LATEST_DELETE)
 
 .PHONY: chaos/run-only-anomaly
-chaos/run-only-anomaly: lint
-	$(CUE_CHAPS_EXPORT) | $(ARGO_SUBMIT) --watch - --parameter-file argowf-only-anomaly.params.yaml || exit 1
+chaos/run-only-anomaly: chaos/lint
+	$(CUE_CHAOS_EXPORT) | $(ARGO_SUBMIT) --watch - --parameter-file argowf-only-anomaly.params.yaml || exit 1
 
 .PHONY: chaos/print-yaml
 chaos/print-yaml:
