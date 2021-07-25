@@ -8,7 +8,7 @@ releases:
   - name: chaos
     namespace: litmus
     chart: litmuschaos/litmus
-    version: ~1.15.0
+    version: ~1.16.0
     values:
       - nodeSelector:
           cloud.google.com/gke-nodepool: control-pool
