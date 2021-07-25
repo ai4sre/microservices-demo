@@ -8,10 +8,18 @@ releases:
   - name: chaos
     namespace: litmus
     chart: litmuschaos/litmus
-    version: ~1.15.0
+    version: ~1.16.0
     values:
       - nodeSelector:
           cloud.google.com/gke-nodepool: control-pool
+  - name: kubernetes-chaos
+    namespace: litmus
+    chart: litmuschaos/kubernetes-chaos
+    version: ~2.13.0
+    values:
+      - image:
+          litmusGO:
+            pullPolicy: IfNotPresent # pullPolicy should be set to 'Always' when chart version updated
   - name: argo-workflows
     namespace: argo
     chart: argoproj/argo-workflows
