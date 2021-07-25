@@ -12,6 +12,10 @@ releases:
     values:
       - nodeSelector:
           cloud.google.com/gke-nodepool: control-pool
+  - name: kubernetes-chaos
+    namespace: litmus
+    chart: litmuschaos/kubernetes-chaos
+    version: ~2.13.0
   - name: argo-workflows
     namespace: argo
     chart: argoproj/argo-workflows
