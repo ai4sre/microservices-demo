@@ -16,6 +16,10 @@ releases:
     namespace: litmus
     chart: litmuschaos/kubernetes-chaos
     version: ~2.13.0
+    values:
+      - image:
+          litmusGO:
+            pullPolicy: IfNotPresent # pullPolicy should be set to 'Always' when chart version updated
   - name: argo-workflows
     namespace: argo
     chart: argoproj/argo-workflows
