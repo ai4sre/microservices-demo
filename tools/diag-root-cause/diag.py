@@ -270,6 +270,54 @@ def build_causal_graph(dm, labels, init_g, alpha, pc_stable):
     return G
 
 
+def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
+    reduced_df, metrics_dimension, clustering_info, mappings, metrics_meta = \
+        read_data_file(tsdr_file)
+    if ROOT_METRIC_NODE not in reduced_df.columns:
+        raise ValueError(f"{tsdr_file} has no root metric node: {ROOT_METRIC_NODE}")
+
+    labels = {}
+    for i in range(len(reduced_df.columns)):
+        labels[i] = reduced_df.columns[i]
+    print("--> Building no paths", file=sys.stderr)
+    no_paths = build_no_paths(labels, mappings)
+    print("--> Preparing initial graph", file=sys.stderr)
+    init_g = prepare_init_graph(reduced_df, no_paths)
+    print("--> Building causal graph", file=sys.stderr)
+    g = build_causal_graph(
+        reduced_df.values, labels, init_g, citest_alpha, pc_stable)
+
+    agraph = nx.nx_agraph.to_agraph(g)
+    img = agraph.draw(prog='sfdp', format='png')
+    if out_dir is None:
+        Image(img)
+    else:
+        id = os.path.splitext(os.path.basename(tsdr_file))[0]
+        out_dir = os.path.join(out_dir, id)
+        if not os.path.isdir(out_dir):
+            os.makedirs(out_dir)
+        ts = datetime.now().strftime("%Y%m%d%H%M%S")
+        imgfile = os.path.join(out_dir, f"{id}__{ts}") + '.png'
+        plt.savefig(imgfile)
+        print(f"Saved the file of causal graph image to {imgfile}", file=sys.stderr)
+
+        metadata = {
+            'metrics_meta': metrics_meta,
+            'parameters': {
+                'pc-stable': pc_stable,
+                'citest_alpha': citest_alpha,
+            },
+            'metrics_dimension': metrics_dimension,
+            'clustering_info': clustering_info,
+            # convert base64 encoded bytes to string to serialize it as json
+            'raw_image': base64.b64encode(img).decode('utf-8'),
+        }
+        metafile = os.path.join(out_dir, f"{id}__{ts}") + '.json'
+        with open(metafile, mode='w') as f:
+            json.dump(metadata, f, indent=4)
+        print(f"Saved the file of metadata to {metafile}", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("tsdr_resultfile", help="results file of tsdr")
@@ -283,52 +331,7 @@ def main():
     parser.add_argument("--out-dir",
                         help='output directory for saving graph image and metadata from tsdr')
     args = parser.parse_args()
-
-    reduced_df, metrics_dimension, clustering_info, mappings, metrics_meta = \
-        read_data_file(args.tsdr_resultfile)
-    if ROOT_METRIC_NODE not in reduced_df.columns:
-        raise Exception(f"{args.tsdr_resultfile} has no root metric node: {ROOT_METRIC_NODE}")
-
-    labels = {}
-    for i in range(len(reduced_df.columns)):
-        labels[i] = reduced_df.columns[i]
-    print("--> Building no paths", file=sys.stderr)
-    no_paths = build_no_paths(labels, mappings)
-    print("--> Preparing initial graph", file=sys.stderr)
-    init_g = prepare_init_graph(reduced_df, no_paths)
-    print("--> Building causal graph", file=sys.stderr)
-    g = build_causal_graph(
-        reduced_df.values, labels, init_g, args.citest_alpha, args.pc_stable)
-
-    agraph = nx.nx_agraph.to_agraph(g)
-    img = agraph.draw(prog='sfdp', format='png')
-    if args.out_dir is None:
-        Image(img)
-    else:
-        id = os.path.splitext(os.path.basename(args.tsdr_resultfile))[0]
-        out_dir = os.path.join(args.out_dir, id)
-        if not os.path.isdir(out_dir):
-            os.makedirs(out_dir)
-        ts = datetime.now().strftime("%Y%m%d%H%M%S")
-        imgfile = os.path.join(out_dir, f"{id}__{ts}") + '.png'
-        plt.savefig(imgfile)
-        print(f"Saved the file of causal graph image to {imgfile}", file=sys.stderr)
-
-        metadata = {
-            'metrics_meta': metrics_meta,
-            'parameters': {
-                'pc-stable': args.pc_stable,
-                'citest_alpha': args.citest_alpha,
-            },
-            'metrics_dimension': metrics_dimension,
-            'clustering_info': clustering_info,
-            # convert base64 encoded bytes to string to serialize it as json
-            'raw_image': base64.b64encode(img).decode('utf-8'),
-        }
-        metafile = os.path.join(out_dir, f"{id}__{ts}") + '.json'
-        with open(metafile, mode='w') as f:
-            json.dump(metadata, f, indent=4)
-        print(f"Saved the file of metadata to {metafile}", file=sys.stderr)
+    diag(args.tsdr_resultfile, args.citest_alpha, args.pc_stable, args.out_dir)
 
 
 if __name__ == '__main__':
