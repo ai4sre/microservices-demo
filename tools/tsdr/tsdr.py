@@ -308,6 +308,8 @@ def run_sieve(data_df, metrics_dimension, services_list, max_workers):
 
 
 def read_metrics_json(data_file):
+    with open(data_file) as f:
+        raw_json = json.load(f)
     raw_data = pd.read_json(data_file)
     data_df = pd.DataFrame()
     for target in TARGET_DATA:
@@ -327,7 +329,7 @@ def read_metrics_json(data_file):
                 data_df[column_name] = np.array(metric["values"], dtype=np.float64)[:, 1][-PLOTS_NUM:]
     data_df = data_df.round(4)
     data_df = data_df.interpolate(method="spline", order=3, limit_direction="both")
-    return data_df, raw_data['mappings'].to_dict(), raw_data['meta'].to_dict()
+    return data_df, raw_json['mappings'], raw_json['meta']
 
 
 def prepare_services_list(data_df):
