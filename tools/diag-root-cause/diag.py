@@ -275,7 +275,7 @@ def main():
     parser.add_argument("tsdr_resultfile", help="results file of tsdr")
     parser.add_argument("--citest-alpha",
                         default=SIGNIFICANCE_LEVEL,
-                        type=int,
+                        type=float,
                         help="alpha value of independence test for building causality graph")
     parser.add_argument("--pc-stable",
                         action='store_true',
