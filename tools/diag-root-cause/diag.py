@@ -89,7 +89,8 @@ def read_data_file(tsdr_result_file):
 
     df = pd.concat([containers_df, services_df, nodes_df], axis=1)
     return df, tsdr_result['metrics_dimension'], \
-        tsdr_result['clustering_info'], tsdr_result['components_mappings']
+        tsdr_result['clustering_info'], tsdr_result['components_mappings'], \
+        tsdr_result['metrics_meta']
 
 
 def build_no_paths(labels, mappings):
@@ -283,7 +284,7 @@ def main():
                         help='output directory for saving graph image and metadata from tsdr')
     args = parser.parse_args()
 
-    reduced_df, metrics_dimension, clustering_info, mappings = \
+    reduced_df, metrics_dimension, clustering_info, mappings, metrics_meta = \
         read_data_file(args.tsdr_resultfile)
     if ROOT_METRIC_NODE not in reduced_df.columns:
         raise Exception(f"{args.tsdr_resultfile} has no root metric node: {ROOT_METRIC_NODE}")
@@ -314,6 +315,7 @@ def main():
         print(f"Saved the file of causal graph image to {imgfile}", file=sys.stderr)
 
         metadata = {
+            'metrics_meta': metrics_meta,
             'parameters': {
                 'pc-stable': args.pc_stable,
                 'citest_alpha': args.citest_alpha,
