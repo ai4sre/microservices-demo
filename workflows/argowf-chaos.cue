@@ -11,7 +11,7 @@ import "strings"
 	"""
 	comparator: {
 		criteria: ">="
-		value: "9000" // 9k qps
+		value: "6000" // 6k qps
 	}
 }
 
@@ -72,7 +72,7 @@ import "strings"
 				value: "eth0"
 			}, {
 				name: "NETWORK_PACKET_LOSS_PERCENTAGE"
-				value: "60"
+				value: "20"
 			}, {
 				name:  "TOTAL_CHAOS_DURATION"
 				value: "{{workflow.parameters.chaosDurationSec}}"
@@ -91,7 +91,7 @@ import "strings"
 				value: "eth0"
 			}, {
 				name: "NETWORK_LATENCY"
-				value: "2000"
+				value: "200" // ms
 			}, {
 				name:  "TOTAL_CHAOS_DURATION"
 				value: "{{workflow.parameters.chaosDurationSec}}"
@@ -99,28 +99,6 @@ import "strings"
 			probe: #probe
 		}
 	}]
-	// "pod-ioreq-stress": [{
-	// 	name: "pod-cpu-hog"
-	// 	spec: {
-	// 		components: env: [{
-	// 			name:  "TARGET_CONTAINER"
-	// 			value: "{{inputs.parameters.appLabel}}"
-	// 		}, {
-	// 			name:  "CPU_CORES"
-	// 			value: "1"
-	// 		}, {
-	// 			name: "CHAOS_INJECT_COMMAND"
-	// 			value: "stress-ng --io 2"
-	// 		}, {
-	// 			name: "CHAOS_KILL_COMMAND"
-	// 			value: "kill -9 $(ps afx | grep \"[stress\-ng]\" | awk '{print$1}' | tr '\n' ' ')"
-	// 		}, {
-	// 			name:  "TOTAL_CHAOS_DURATION"
-	// 			value: "{{workflow.parameters.chaosDurationSec}}"
-	// 		}]
-	// 		probe: #probe
-	// 	}
-	// }]
 }
 
 apiVersion: "argoproj.io/v1alpha1"
@@ -129,6 +107,9 @@ metadata: generateName: "argowf-chaos-"
 spec: {
 	entrypoint:         "argowf-chaos"
 	serviceAccountName: "argo-chaos"
+	nodeSelector: {
+		"cloud.google.com/gke-nodepool": "control-pool"
+	}
 	arguments: parameters: [{
 		name:  "appNamespace"
 		value: "sock-shop"
@@ -155,18 +136,15 @@ spec: {
 		name: "chaosTypes"
 		value: strings.Join([for type, _ in #chaosTypeToExps { "'" + type + "'" }], ",")
 	}, {
-		name: "restartPod"
-		value: 1
-	}, {
 		name: "gcsBucket"
 		value: "microservices-demo-artifacts"
 	}, {
 		name: "litmusJobCleanupPolicy"
 		value: "delete" // defaut value in litmus
 	}]
-	parallelism: 1
 	templates: [{
 		name: "argowf-chaos"
+		parallelism: 1
 		steps: [ [ for type, _ in #chaosTypeToExps {
 			name:     "run-chaos-\( type )"
 			template: "repeat-chaos-\( type )"
@@ -189,6 +167,7 @@ spec: {
 		}, {
 			name: "appLabel"
 		}]
+		parallelism: 1
 		steps: [ [{
 			name:     "inject-chaos-\( type )-and-get-metrics"
 			template: "inject-chaos-\( type )-and-get-metrics"
@@ -200,13 +179,6 @@ spec: {
 				value: "{{inputs.parameters.appLabel}}"
 			}]
 			withSequence: count: "{{inputs.parameters.repeatNum}}"
-		}, {
-			name:     "sleep"
-			template: "sleep-n-sec"
-			arguments: parameters: [{
-				name:  "seconds"
-				value: "{{workflow.parameters.chaosIntervalSec}}"
-			}]
 		}] ]
 	}, for type, _ in #chaosTypeToExps {
 		#chaosEngineName: "{{inputs.parameters.appLabel}}-\( type )-{{inputs.parameters.jobN}}"
@@ -227,8 +199,7 @@ spec: {
 				name:  "chaosResultName"
 				value: #chaosResultName
 			}]
-		}],
-		[{
+		}], [{
 			name:     "inject-chaos-\( type )"
 			template: "inject-chaos-\( type )"
 			arguments: parameters: [{
@@ -262,14 +233,6 @@ spec: {
 				value: "{{steps.get-injection-finished-time.outputs.result}}"
 			}]
 		}], [{
-			name: "restart-pod-injected-chaos"
-			template: "restart-pod"
-			arguments: parameters: [{
-				name: "appLabel"
-				value: "{{inputs.parameters.appLabel}}"
-			}]
-			when: "{{workflow.parameters.restartPod}} == 1"
-		}], [{
 			name: "revert-chaosengine"
 			template: "revert-chaosengine"
 			arguments: parameters: [{
@@ -279,8 +242,80 @@ spec: {
 				name:  "chaosResultName"
 				value: #chaosResultName
 			}]
-		}],
-		]
+		}], [{
+			name: "run-tsdr-and-then-sleep"
+			template: "run-tsdr-and-then-sleep"
+			arguments: {
+				parameters: [{
+					name: "gcsMetricsFilePath"
+					value: "{{steps.get-metrics.outputs.parameters.metrics-file-path}}"
+				}]
+				artifacts: [{
+					name: "metricsFile"
+					from: "{{steps.get-metrics.outputs.artifacts.metrics-artifacts-gcs}}"
+				}]
+			}
+		}] ]
+	}, {
+		name: "run-tsdr-and-then-sleep"
+		inputs: {
+			parameters: [{
+				name: "gcsMetricsFilePath"
+			}]
+			artifacts: [{
+				name: "metricsFile"
+			}]
+		}
+		steps: [ [{
+			name: "run-tsdr"
+			template: "run-tsdr-by-all-methods"
+			arguments: {
+				parameters: [{
+					name: "gcsMetricsFilePath"
+					value: "{{inputs.parameters.gcsMetricsFilePath}}"
+				}]
+				artifacts: [{
+					name: "metricsFile"
+					from: "{{inputs.artifacts.metricsFile}}"
+				}]
+			}
+		}, {
+			name:     "sleep"
+			template: "sleep-n-sec"
+			arguments: parameters: [{
+				name:  "seconds"
+				value: "{{workflow.parameters.chaosIntervalSec}}"
+			}]
+		} ] ]
+	}, {
+		name: "run-tsdr-by-all-methods"
+		parallelism: 1
+		inputs: {
+			parameters: [{
+				name: "gcsMetricsFilePath"
+			}]
+			artifacts: [{
+				name: "metricsFile"
+			}]
+		}
+		steps: [ [{
+			name: "run-tsdr"
+			template: "run-tsdr-by-method"
+			arguments: {
+				parameters: [{
+					name: "tsdrMethod"
+					value: "{{item}}"
+				}, {
+					name: "gcsMetricsFilePath"
+					value: "{{inputs.parameters.gcsMetricsFilePath}}"
+				}]
+				artifacts: [{
+					name: "metricsFile"
+					from: "{{inputs.artifacts.metricsFile}}"
+				}]
+			}
+			withItems: ["tsifter", "sieve"]
+		}] ]
 	}, {
 		// return <injection started time> + <chaos duration>
 		name: "get-injection-finished-time"
@@ -306,6 +341,7 @@ spec: {
 		}, {
 			name: "endTimestamp"
 		}]
+		#metricsPath: "/tmp/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}-{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json",
 		container: {
 			image: "ghcr.io/ai4sre/metrics-tools:latest"
 			imagePullPolicy: "Always"
@@ -317,29 +353,25 @@ spec: {
 				"--end",
 				"{{inputs.parameters.endTimestamp}}",
 				"--out",
-				"/tmp/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}-{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json",
+				#metricsPath,
 			]
 		}
-		outputs: artifacts: [{
-			name: "metrics-artifacts"
-			path: "/tmp/{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}-{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json"
-			gcs: {
-				bucket: "{{ workflow.parameters.gcsBucket }}"
-				// see https://github.com/argoproj/argo-workflows/blob/510b4a816dbb2d33f37510db1fd92b841c4d14d3/docs/workflow-controller-configmap.yaml#L93-L106
-				key: """
-				metrics/{{workflow.creationTimestamp.Y}}/{{workflow.creationTimestamp.m}}/{{workflow.creationTimestamp.d}}/{{workflow.name}}/{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json.tgz
-				"""
-			}
-		}]
-	}, {
-		name: "restart-pod"
-		inputs: parameters: [{
-			name: "appLabel"
-		}]
-		container: {
-			image: "bitnami/kubectl"
-			command: ["sh", "-c"]
-			args: ["kubectl rollout restart deployment/{{inputs.parameters.appLabel}} -n {{workflow.parameters.appNamespace}}; echo sleeping for 60 seconds; sleep 60; echo done"]
+		outputs: {
+			#gcsMetricsFilePath: """
+			metrics/{{workflow.creationTimestamp.Y}}/{{workflow.creationTimestamp.m}}/{{workflow.creationTimestamp.d}}/{{workflow.name}}/{{inputs.parameters.appLabel}}_{{inputs.parameters.chaosType}}_{{inputs.parameters.jobN}}.json.tgz
+			"""
+			artifacts: [{
+				name: "metrics-artifacts-gcs"
+				path: #metricsPath
+				gcs: {
+					bucket: "{{ workflow.parameters.gcsBucket }}"
+					key: #gcsMetricsFilePath
+				}
+			}]
+			parameters: [{
+				name: "metrics-file-path"
+				value: #gcsMetricsFilePath
+			}]
 		}
 	}, {
 		name: "revert-chaosengine"
@@ -357,6 +389,50 @@ spec: {
 			true
 			"""]
 		}
+	}, {
+		// Note the following duplicate code in argowf-analytics.cue. 
+		name: "run-tsdr-by-method"
+		nodeSelector: {
+			"cloud.google.com/gke-nodepool": "analytics-pool"
+		}
+		inputs: {
+			parameters: [{
+				name: "tsdrMethod"
+			}, {
+				name: "gcsMetricsFilePath"
+			}]
+			artifacts: [ {
+				name: "metricsFile"
+				path: "/tmp/metrics.json"
+				gcs: {
+					bucket: "{{ workflow.parameters.gcsBucket }}"
+					key: "{{inputs.parameters.gcsMetricsFilePath}}"
+				}
+			} ]
+		}
+		#result_file_name: """
+		{{inputs.parameters.tsdrMethod}}-{{workflow.creationTimestamp.Y}}-{{workflow.creationTimestamp.m}}-{{workflow.creationTimestamp.d}}-{{workflow.name}}.json
+		"""
+		container: {
+			image: "ghcr.io/ai4sre/tsdr-tools:latest"
+			imagePullPolicy: "Always"
+			command: ["/usr/src/app/tsdr.py"]
+			args: [ "--method", "{{inputs.parameters.tsdrMethod}}",
+					"--max-workers", "2",
+					"--include-raw-data",
+					"--out", "/tmp/\(#result_file_name)", 
+					"/tmp/metrics.json"]
+		}
+		outputs: artifacts: [{
+			name: "tsdr-outputs"
+			path: "/tmp/\(#result_file_name)"
+			gcs: {
+				bucket: "{{workflow.parameters.gcsBucket}}"
+				key: """
+				results/{{=sprig.trimSuffix('.tgz', inputs.parameters.gcsMetricsFilePath)}}/\( #result_file_name + ".tgz" )
+				"""
+			}
+		}]
 	}, {
 		name: "sleep-n-sec"
 		inputs: parameters: [{
@@ -397,6 +473,9 @@ spec: {
 						}
 						chaosServiceAccount: "{{workflow.parameters.chaosServiceAccount}}"
 						jobCleanUpPolicy:    "{{workflow.parameters.litmusJobCleanupPolicy}}"
+						components: runner: nodeSelector: {
+							"cloud.google.com/gke-nodepool": "control-pool"
+						}
 						experiments: exps
 					}
 				}
