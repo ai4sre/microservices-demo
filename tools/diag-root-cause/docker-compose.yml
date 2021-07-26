@@ -6,3 +6,8 @@ services:
     volumes:
       - ./:/usr/src/app
     entrypoint: ["/usr/src/app/diag.py"]
+  combination:
+    build: .
+    volumes:
+      - ./:/usr/src/app
+    entrypoint: ["/usr/src/app/combination.py"]

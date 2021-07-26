@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
 import argparse
+import base64
 import json
+import os
 import re
 import sys
+from datetime import datetime
 from itertools import combinations
 
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -85,7 +89,8 @@ def read_data_file(tsdr_result_file):
 
     df = pd.concat([containers_df, services_df, nodes_df], axis=1)
     return df, tsdr_result['metrics_dimension'], \
-        tsdr_result['clustering_info'], tsdr_result['components_mappings']
+        tsdr_result['clustering_info'], tsdr_result['components_mappings'], \
+        tsdr_result['metrics_meta']
 
 
 def build_no_paths(labels, mappings):
@@ -228,16 +233,18 @@ def prepare_init_graph(reduced_df, no_paths):
     return init_g
 
 
-def build_causal_graph(dm, labels, init_g):
+def build_causal_graph(dm, labels, init_g, alpha, pc_stable):
     """
     Build causal graph with PC algorithm.
     """
     cm = np.corrcoef(dm.T)
+    pc_method = 'stable' if pc_stable else None
     (G, sep_set) = pcalg.estimate_skeleton(indep_test_func=ci_test_fisher_z,
                                            data_matrix=dm,
-                                           alpha=SIGNIFICANCE_LEVEL,
+                                           alpha=alpha,
                                            corr_matrix=cm,
-                                           init_graph=init_g)
+                                           init_graph=init_g,
+                                           method=pc_method)
     G = pcalg.estimate_cpdag(skel_graph=G, sep_set=sep_set)
 
     G = nx.relabel_nodes(G, labels)
@@ -263,15 +270,11 @@ def build_causal_graph(dm, labels, init_g):
     return G
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("tsdr_resultfile", help="results file of tsdr")
-    args = parser.parse_args()
-
-    reduced_df, metrics_dimension, clustering_info, mappings = \
-        read_data_file(args.tsdr_resultfile)
+def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
+    reduced_df, metrics_dimension, clustering_info, mappings, metrics_meta = \
+        read_data_file(tsdr_file)
     if ROOT_METRIC_NODE not in reduced_df.columns:
-        raise Exception(f"{args.tsdr_resultfile} has no root metric node: {ROOT_METRIC_NODE}")
+        raise ValueError(f"{tsdr_file} has no root metric node: {ROOT_METRIC_NODE}")
 
     labels = {}
     for i in range(len(reduced_df.columns)):
@@ -281,9 +284,54 @@ def main():
     print("--> Preparing initial graph", file=sys.stderr)
     init_g = prepare_init_graph(reduced_df, no_paths)
     print("--> Building causal graph", file=sys.stderr)
-    g = build_causal_graph(reduced_df.values, labels, init_g)
-    agraph = nx.nx_agraph.to_agraph(g).draw(prog='sfdp', format='png')
-    Image(agraph)
+    g = build_causal_graph(
+        reduced_df.values, labels, init_g, citest_alpha, pc_stable)
+
+    agraph = nx.nx_agraph.to_agraph(g)
+    img = agraph.draw(prog='sfdp', format='png')
+    if out_dir is None:
+        Image(img)
+    else:
+        id = os.path.splitext(os.path.basename(tsdr_file))[0]
+        out_dir = os.path.join(out_dir, id)
+        if not os.path.isdir(out_dir):
+            os.makedirs(out_dir)
+        ts = datetime.now().strftime("%Y%m%d%H%M%S")
+        imgfile = os.path.join(out_dir, ts) + '.png'
+        plt.savefig(imgfile)
+        print(f"Saved the file of causal graph image to {imgfile}", file=sys.stderr)
+
+        metadata = {
+            'metrics_meta': metrics_meta,
+            'parameters': {
+                'pc-stable': pc_stable,
+                'citest_alpha': citest_alpha,
+            },
+            'metrics_dimension': metrics_dimension,
+            'clustering_info': clustering_info,
+            # convert base64 encoded bytes to string to serialize it as json
+            'raw_image': base64.b64encode(img).decode('utf-8'),
+        }
+        metafile = os.path.join(out_dir, ts) + '.json'
+        with open(metafile, mode='w') as f:
+            json.dump(metadata, f, indent=4)
+        print(f"Saved the file of metadata to {metafile}", file=sys.stderr)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("tsdr_resultfile", help="results file of tsdr")
+    parser.add_argument("--citest-alpha",
+                        default=SIGNIFICANCE_LEVEL,
+                        type=float,
+                        help="alpha value of independence test for building causality graph")
+    parser.add_argument("--pc-stable",
+                        action='store_true',
+                        help='whether to use stable method of PC-algorithm')
+    parser.add_argument("--out-dir",
+                        help='output directory for saving graph image and metadata from tsdr')
+    args = parser.parse_args()
+    diag(args.tsdr_resultfile, args.citest_alpha, args.pc_stable, args.out_dir)
 
 
 if __name__ == '__main__':

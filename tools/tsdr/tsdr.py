@@ -308,6 +308,8 @@ def run_sieve(data_df, metrics_dimension, services_list, max_workers):
 
 
 def read_metrics_json(data_file):
+    with open(data_file) as f:
+        raw_json = json.load(f)
     raw_data = pd.read_json(data_file)
     data_df = pd.DataFrame()
     for target in TARGET_DATA:
@@ -327,7 +329,7 @@ def read_metrics_json(data_file):
                 data_df[column_name] = np.array(metric["values"], dtype=np.float64)[:, 1][-PLOTS_NUM:]
     data_df = data_df.round(4)
     data_df = data_df.interpolate(method="spline", order=3, limit_direction="both")
-    return data_df, raw_data['mappings'].to_dict()
+    return data_df, raw_json['mappings'], raw_json['meta']
 
 
 def prepare_services_list(data_df):
@@ -374,7 +376,7 @@ def main():
                         action='store_true')
     args = parser.parse_args()
 
-    data_df, mappings = read_metrics_json(args.datafile)
+    data_df, mappings, metrics_meta = read_metrics_json(args.datafile)
     services = prepare_services_list(data_df)
 
     metrics_dimension = aggregate_dimension(data_df)
@@ -390,18 +392,20 @@ def main():
               TSIFTER_METHOD, SIEVE_METHOD, file=sys.stderr)
         exit(-1)
 
-    summary = {}
-    summary["data_file"] = args.datafile.split("/")[-1]
-    summary["number_of_plots"] = PLOTS_NUM
-    summary["execution_time"] = {
-        "reduce_series": elapsedTime['step1'],
-        "clustering": elapsedTime['step2'],
-        "total": round(elapsedTime['step1']+elapsedTime['step2'], 2)
+    summary = {
+        'data_file': args.datafile.split("/")[-1],
+        'number_of_plots': PLOTS_NUM,
+        'execution_time': {
+            "reduce_series": elapsedTime['step1'],
+            "clustering": elapsedTime['step2'],
+            "total": round(elapsedTime['step1']+elapsedTime['step2'], 2)
+        },
+        'metrics_dimension': metrics_dimension,
+        'reduced_metrics': list(reduced_df.columns),
+        'clustering_info': clustering_info,
+        'components_mappings': mappings,
+        'metrics_meta': metrics_meta,
     }
-    summary["metrics_dimension"] = metrics_dimension
-    summary["reduced_metrics"] = list(reduced_df.columns)
-    summary["clustering_info"] = clustering_info
-    summary["components_mappings"] = mappings
     if args.include_raw_data:
         summary["reduced_metrics_raw_data"] = reduced_df.to_dict()
 
