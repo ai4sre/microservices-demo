@@ -174,7 +174,7 @@ def support_set_default(obj):
 
 
 def metrics_as_result(container_metrics, pod_metrics, node_metrics,
-                      throughput_metrics, latency_metrics, time_meta):
+                      throughput_metrics, latency_metrics, time_meta, injected_meta):
     start, end = time_meta['start'], time_meta['end']
     grafana_url = time_meta['grafana_url']
     dashboard_url = f"{grafana_url}/{GRAFANA_DASHBOARD}?orgId=1&from={start}000&to={end}000"
@@ -193,11 +193,12 @@ def metrics_as_result(container_metrics, pod_metrics, node_metrics,
                 'middlewares': 0,
                 'services': 0,
                 'nodes': 0,
-            }
+            },
         },
         'mappings': {'nodes-containers': {}},
         'containers': {}, 'middlewares': {}, 'nodes': {}, 'services': {},
     }
+    data['meta'].update(injected_meta)
 
     dupcheck = {}
     for metric in container_metrics:
@@ -363,6 +364,8 @@ def main():
     parser.add_argument("--end", help="end time (UNIX or RFC 3339)", type=str)
     parser.add_argument("--step", help="step seconds", type=int, default=STEP)
     parser.add_argument("--duration", help="", type=str, default="30m")
+    parser.add_argument("--chaos-injected-component", help="chaos-injected component")
+    parser.add_argument("--injected-chaos-type", help="chaos type such as 'pod-cpu-hog'")
     parser.add_argument("--out", help="output path", type=str)
     args = parser.parse_args()
 
@@ -446,6 +449,9 @@ def main():
             'step': args.step,
             'prometheus_url': args.prometheus_url,
             'grafana_url': args.grafana_url,
+        }, {
+            'chaos_injected_component': args.chaos_injected_component,
+            'injected_chaos_type': args.injected_chaos_type,
         }
     )
 
