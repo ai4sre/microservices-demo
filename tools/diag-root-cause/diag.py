@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import base64
 import json
 import os
 import re
@@ -308,9 +309,24 @@ def main():
         if not os.path.isdir(out_dir):
             os.makedirs(out_dir)
         ts = datetime.now().strftime("%Y%m%d%H%M%S")
-        imgfile = os.path.join(out_dir, ts) + '.png'
+        imgfile = os.path.join(out_dir, f"{id}__{ts}") + '.png'
         plt.savefig(imgfile)
         print(f"Saved the file of causal graph image to {imgfile}", file=sys.stderr)
+
+        metadata = {
+            'parameters': {
+                'pc-stable': args.pc_stable,
+                'citest_alpha': args.citest_alpha,
+            },
+            'metrics_dimension': metrics_dimension,
+            'clustering_info': clustering_info,
+            # convert base64 encoded bytes to string to serialize it as json
+            'raw_image': base64.b64encode(img).decode('utf-8'),
+        }
+        metafile = os.path.join(out_dir, f"{id}__{ts}") + '.json'
+        with open(metafile, mode='w') as f:
+            json.dump(metadata, f, indent=4)
+        print(f"Saved the file of metadata to {metafile}", file=sys.stderr)
 
 
 if __name__ == '__main__':
