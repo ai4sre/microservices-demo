@@ -316,6 +316,7 @@ def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
         with open(metafile, mode='w') as f:
             json.dump(metadata, f, indent=4)
         print(f"Saved the file of metadata to {metafile}", file=sys.stderr)
+        return metadata
 
 
 def main():
