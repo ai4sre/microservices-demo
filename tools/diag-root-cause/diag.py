@@ -307,6 +307,10 @@ def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
                 'pc-stable': pc_stable,
                 'citest_alpha': citest_alpha,
             },
+            'causal_graph_stats': {
+                'nodes_num': g.number_of_nodes(),
+                'number_of_edges': g.number_of_edges(),
+            },
             'metrics_dimension': metrics_dimension,
             'clustering_info': clustering_info,
             # convert base64 encoded bytes to string to serialize it as json
