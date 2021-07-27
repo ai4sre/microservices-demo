@@ -393,6 +393,7 @@ def main():
         exit(-1)
 
     summary = {
+        'tsdr_method': args.method,
         'data_file': args.datafile.split("/")[-1],
         'number_of_plots': PLOTS_NUM,
         'execution_time': {
