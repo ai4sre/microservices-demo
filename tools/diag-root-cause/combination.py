@@ -22,6 +22,13 @@ MARKDOWN_TMPL = """# Generated Causality Graphs at {{ ts }}
 
 ### params: stable {{ val.pc_stable }}, alpha {{ val.alpha }}
 
+- chaos type: {{ chaos_type }}
+- chaos component: {{ comp_name }}
+- causal graph nodes: {{ val.meta.causal_graph_stats.nodes_num }}
+- causal graph edges: {{ val.meta.causal_graph_stats.edges_num }}
+{% set total = val.meta.metrics_dimension.total -%}
+- tsdr metrics total: {{ total[0]/total[1]/total[2] }}
+
 ![](data:image/png;base64,{{ val.meta.raw_image }})
 
 {%- endfor %}
