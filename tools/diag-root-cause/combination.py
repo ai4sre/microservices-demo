@@ -18,7 +18,7 @@ MARKDOWN_TMPL = """# Generated Causality Graphs at {{ ts }}
 
 ## {{ chaos_type }} in {{ comp_name }}
 
-{% for val in vals -%}
+{% for val in vals %}
 
 ### params: stable {{ val.pc_stable }}, alpha {{ val.alpha }}
 
@@ -27,11 +27,11 @@ MARKDOWN_TMPL = """# Generated Causality Graphs at {{ ts }}
 - causal graph nodes: {{ val.meta.causal_graph_stats.nodes_num }}
 - causal graph edges: {{ val.meta.causal_graph_stats.edges_num }}
 {% set total = val.meta.metrics_dimension.total -%}
-- tsdr metrics total: {{ total[0]/total[1]/total[2] }}
+- tsdr metrics total: {{ total[0]|string + '/' + total[1]|string + '/' + total[2]|string }}
 
 ![](data:image/png;base64,{{ val.meta.raw_image }})
 
-{%- endfor %}
+{% endfor %}
 {%- endfor %}
 {%- endfor %}
 """
