@@ -307,6 +307,10 @@ def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
                 'pc-stable': pc_stable,
                 'citest_alpha': citest_alpha,
             },
+            'causal_graph_stats': {
+                'nodes_num': g.number_of_nodes(),
+                'edges_num': g.number_of_edges(),
+            },
             'metrics_dimension': metrics_dimension,
             'clustering_info': clustering_info,
             # convert base64 encoded bytes to string to serialize it as json
@@ -316,6 +320,7 @@ def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
         with open(metafile, mode='w') as f:
             json.dump(metadata, f, indent=4)
         print(f"Saved the file of metadata to {metafile}", file=sys.stderr)
+        return metadata
 
 
 def main():

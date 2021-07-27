@@ -15,6 +15,7 @@ scikit-learn = "^0.24.2"
 ipython = "^7.25.0"
 pygraphviz = "^1.7"
 pgmpy = "^0.1.15"
+Jinja2 = "^3.0.1"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.9.2"
