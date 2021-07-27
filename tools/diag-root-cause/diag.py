@@ -309,7 +309,7 @@ def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
             },
             'causal_graph_stats': {
                 'nodes_num': g.number_of_nodes(),
-                'number_of_edges': g.number_of_edges(),
+                'edges_num': g.number_of_edges(),
             },
             'metrics_dimension': metrics_dimension,
             'clustering_info': clustering_info,
