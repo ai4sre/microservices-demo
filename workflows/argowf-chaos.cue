@@ -125,7 +125,7 @@ spec: {
 		_cue_app_labels: #appLabels
 	}, {
 		name:  "repeatNum"
-		value: 3
+		value: 1
 	}, {
 		name:  "chaosDurationSec"
 		value: 300
