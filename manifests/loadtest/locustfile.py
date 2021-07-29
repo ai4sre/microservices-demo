@@ -5,7 +5,7 @@ from locust import HttpUser, constant, task
 
 
 class SockShopLoadTest(HttpUser):
-    wait_time = constant(0.8)
+    wait_time = constant(1.0)
 
     @task
     def load(self):
