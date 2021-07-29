@@ -11,7 +11,7 @@ import "strings"
 	"""
 	comparator: {
 		criteria: ">="
-		value: "6000" // 6k qps
+		value: "4000" // 4k qps
 	}
 }
 
@@ -72,8 +72,8 @@ import "strings"
 				value: "eth0"
 			}, {
 				name: "NETWORK_PACKET_LOSS_PERCENTAGE"
-				value: "20"
-			}, {
+				value: "5"
+			}, 
 				name:  "TOTAL_CHAOS_DURATION"
 				value: "{{workflow.parameters.chaosDurationSec}}"
 			}]
@@ -91,7 +91,7 @@ import "strings"
 				value: "eth0"
 			}, {
 				name: "NETWORK_LATENCY"
-				value: "200" // ms
+				value: "50" // ms
 			}, {
 				name:  "TOTAL_CHAOS_DURATION"
 				value: "{{workflow.parameters.chaosDurationSec}}"
