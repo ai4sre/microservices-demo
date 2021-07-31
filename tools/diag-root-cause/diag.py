@@ -8,7 +8,7 @@ import re
 import sys
 from datetime import datetime
 from itertools import combinations
-from typing import Any, Union
+from typing import Any, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -278,7 +278,7 @@ def build_causal_graph(dm, labels, init_g, alpha, pc_stable):
     return G
 
 
-def check_cause_metrics(ng: nx.Graph, chaos_type: str, chaos_comp: str) -> Union[bool, List[Any]]:
+def check_cause_metrics(ng: nx.Graph, chaos_type: str, chaos_comp: str) -> Tuple[bool, List[Any]]:
     prefix = CHAOS_TO_CAUSE_METRIC_PREFIX[chaos_type]
     cause_metrics = []
     for node in ng.nodes():
