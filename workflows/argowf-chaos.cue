@@ -73,7 +73,7 @@ import "strings"
 			}, {
 				name: "NETWORK_PACKET_LOSS_PERCENTAGE"
 				value: "5"
-			}, 
+			}, {
 				name:  "TOTAL_CHAOS_DURATION"
 				value: "{{workflow.parameters.chaosDurationSec}}"
 			}]
@@ -326,7 +326,7 @@ spec: {
 			image: "bitnami/kubectl"
 			command: ["sh"]
 			source: """
-			ts=$(kubectl get chaosengine -n litmus -o=jsonpath='{.items[0].metadata.creationTimestamp}')
+			ts=$(kubectl get chaosengine {{inouts.parameters.chaosEngineName}} -n litmus -o=jsonpath='{.metadata.creationTimestamp}')
 			expr $(date -d $ts +'%s') + {{workflow.parameters.chaosDurationSec}}
 			"""
 		}
