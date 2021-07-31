@@ -24,6 +24,7 @@ MARKDOWN_TMPL = """# Generated Causality Graphs at {{ ts }}
 
 - chaos type: {{ chaos_type }}
 - chaos component: {{ comp_name }}
+- grafana dashboard url: <{{ val.meta.metrics_meta.grafana_dashboard_url }}>
 - causal graph nodes: {{ val.meta.causal_graph_stats.nodes_num }}
 - causal graph edges: {{ val.meta.causal_graph_stats.edges_num }}
 {% set total = val.meta.metrics_dimension.total -%}
@@ -57,7 +58,7 @@ def main():
     template = Template(MARKDOWN_TMPL)
     items = {}
     for tsdr_file in args.tsdr_files:
-        for pc_stable in [True, False]:
+        for pc_stable in [True]:
             for alpha in ALPHAS:
                 try:
                     meta = diag.diag(tsdr_file, alpha, pc_stable, dir)
