@@ -326,7 +326,7 @@ spec: {
 			image: "bitnami/kubectl"
 			command: ["sh"]
 			source: """
-			ts=$(kubectl get chaosengine {{inouts.parameters.chaosEngineName}} -n litmus -o=jsonpath='{.metadata.creationTimestamp}')
+			ts=$(kubectl get chaosengine {{inputs.parameters.chaosEngineName}} -n litmus -o=jsonpath='{.metadata.creationTimestamp}')
 			expr $(date -d $ts +'%s') + {{workflow.parameters.chaosDurationSec}}
 			"""
 		}
