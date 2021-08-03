@@ -62,10 +62,10 @@ def main():
     template = Template(MARKDOWN_TMPL)
     items = {}
     for tsdr_file in args.tsdr_files:
-        for pc_stable in [True]:
+        for library in ['pcalg', 'pgmpy']:
             for alpha in ALPHAS:
                 try:
-                    meta = diag.diag(tsdr_file, alpha, pc_stable, dir)
+                    meta = diag.diag(tsdr_file, alpha, True, library, dir)
                     chaosType = meta['metrics_meta']['injected_chaos_type']
                     chaosComp = meta['metrics_meta']['chaos_injected_component']
                     items.setdefault(chaosType, {})
@@ -74,7 +74,7 @@ def main():
                     })
                     items[chaosType][chaosComp]['results'].append({
                         'meta': meta,
-                        'pc_stable': 1 if pc_stable else 0,
+                        'pc_stable': 1,
                         'alpha': alpha,
                     })
                 except ValueError as e:

@@ -16,8 +16,10 @@ import numpy as np
 import pandas as pd
 import pcalg
 from IPython.display import Image
+from pgmpy import estimators
 
 from citest.fisher_z import ci_test_fisher_z
+from citest.fisher_z_pgmpy import fisher_z
 
 SIGNIFICANCE_LEVEL = 0.05
 
@@ -241,7 +243,7 @@ def prepare_init_graph(reduced_df, no_paths):
     return init_g
 
 
-def build_causal_graph(dm, labels, init_g, alpha, pc_stable):
+def build_causal_graph_with_pcalg(dm, labels, init_g, alpha, pc_stable):
     """
     Build causal graph with PC algorithm.
     """
@@ -257,6 +259,24 @@ def build_causal_graph(dm, labels, init_g, alpha, pc_stable):
 
     G = nx.relabel_nodes(G, labels)
 
+    return find_dags(G)
+
+
+def build_causal_graphs_with_pgmpy(df: pd.DataFrame,
+                                   alpha: float,
+                                   pc_stable: bool) -> nx.Graph:
+    c = estimators.PC(data=df)
+    pc_method = 'stable' if pc_stable else None
+    g = c.estimate(
+        variant=pc_method,
+        ci_test=fisher_z,
+        significance_level=alpha,
+        return_type='pdag',
+    )
+    return find_dags(g)
+
+
+def find_dags(G: nx.Graph) -> nx.Graph:
     # Exclude nodes that have no path to "s-front-end_latency" for visualization
     remove_nodes = []
     undirected_G = G.to_undirected()
@@ -274,7 +294,6 @@ def build_causal_graph(dm, labels, init_g, alpha, pc_stable):
             color = "green"
         G.nodes[node]["color"] = color
     G.remove_nodes_from(remove_nodes)
-    print("Number of nodes: {}".format(G.number_of_nodes()))
     return G
 
 
@@ -289,7 +308,7 @@ def check_cause_metrics(ng: nx.Graph, chaos_type: str, chaos_comp: str) -> Tuple
     return False, cause_metrics
 
 
-def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
+def diag(tsdr_file, citest_alpha, pc_stable, library, out_dir):
     reduced_df, metrics_dimension, clustering_info, mappings, metrics_meta = \
         read_data_file(tsdr_file)
     if ROOT_METRIC_NODE not in reduced_df.columns:
@@ -298,13 +317,22 @@ def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
     labels = {}
     for i in range(len(reduced_df.columns)):
         labels[i] = reduced_df.columns[i]
+
     print("--> Building no paths", file=sys.stderr)
     no_paths = build_no_paths(labels, mappings)
+
     print("--> Preparing initial graph", file=sys.stderr)
     init_g = prepare_init_graph(reduced_df, no_paths)
+
     print("--> Building causal graph", file=sys.stderr)
-    g = build_causal_graph(
-        reduced_df.values, labels, init_g, citest_alpha, pc_stable)
+    if library == 'pcalg':
+        g = build_causal_graph_with_pcalg(
+            reduced_df.values, labels, init_g, citest_alpha, pc_stable)
+    elif library == 'pgmpy':
+        g = build_causal_graphs_with_pgmpy(
+            reduced_df, citest_alpha, pc_stable)
+    else:
+        raise ValueError('library should be pcalg or pgmpy')
     
     print("--> Checking causal graph including chaos-injected metrics", file=sys.stderr)
     chaos_type = metrics_meta['injected_chaos_type']
@@ -362,10 +390,15 @@ def main():
     parser.add_argument("--pc-stable",
                         action='store_true',
                         help='whether to use stable method of PC-algorithm')
+    parser.add_argument("--library",
+                        default='pcalg',
+                        help='pcalg or pgmpy')
     parser.add_argument("--out-dir",
                         help='output directory for saving graph image and metadata from tsdr')
     args = parser.parse_args()
-    diag(args.tsdr_resultfile, args.citest_alpha, args.pc_stable, args.out_dir)
+
+    diag(args.tsdr_resultfile, args.citest_alpha,
+         args.pc_stable, args.library, args.out_dir)
 
 
 if __name__ == '__main__':
