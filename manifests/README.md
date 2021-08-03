@@ -32,7 +32,7 @@ $ gcloud container node-pools create control-pool \
 
 $ gcloud container node-pools create analytics-pool \
 	--cluster sock-shop-01 \
-	--machine-type e2-small \
+	--machine-type n2-highcpu-2 \
 	--image-type=cos \
 	--num-nodes=1 \
 	--workload-metadata=GKE_METADATA

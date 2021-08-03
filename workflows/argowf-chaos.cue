@@ -11,7 +11,7 @@ import "strings"
 	"""
 	comparator: {
 		criteria: ">="
-		value: "6000" // 6k qps
+		value: "4000" // 4k qps
 	}
 }
 
@@ -72,7 +72,7 @@ import "strings"
 				value: "eth0"
 			}, {
 				name: "NETWORK_PACKET_LOSS_PERCENTAGE"
-				value: "20"
+				value: "5"
 			}, {
 				name:  "TOTAL_CHAOS_DURATION"
 				value: "{{workflow.parameters.chaosDurationSec}}"
@@ -91,7 +91,7 @@ import "strings"
 				value: "eth0"
 			}, {
 				name: "NETWORK_LATENCY"
-				value: "200" // ms
+				value: "50" // ms
 			}, {
 				name:  "TOTAL_CHAOS_DURATION"
 				value: "{{workflow.parameters.chaosDurationSec}}"
@@ -125,7 +125,7 @@ spec: {
 		_cue_app_labels: #appLabels
 	}, {
 		name:  "repeatNum"
-		value: 3
+		value: 1
 	}, {
 		name:  "chaosDurationSec"
 		value: 300
@@ -326,7 +326,7 @@ spec: {
 			image: "bitnami/kubectl"
 			command: ["sh"]
 			source: """
-			ts=$(kubectl get chaosengine -n litmus -o=jsonpath='{.items[0].metadata.creationTimestamp}')
+			ts=$(kubectl get chaosengine {{inputs.parameters.chaosEngineName}} -n litmus -o=jsonpath='{.metadata.creationTimestamp}')
 			expr $(date -d $ts +'%s') + {{workflow.parameters.chaosDurationSec}}
 			"""
 		}

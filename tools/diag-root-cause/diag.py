@@ -8,6 +8,7 @@ import re
 import sys
 from datetime import datetime
 from itertools import combinations
+from typing import Any, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -62,6 +63,13 @@ SERVICE_CONTAINERS = {
 }
 
 ROOT_METRIC_NODE = "s-front-end_latency"
+
+CHAOS_TO_CAUSE_METRIC_PREFIX = {
+    'pod-cpu-hog': 'cpu_',
+    'pod-memory-hog': 'memory_',
+    'pod-network-loss': 'network_',
+    'pod-network-latency': 'network_',
+}
 
 
 def read_data_file(tsdr_result_file):
@@ -270,6 +278,17 @@ def build_causal_graph(dm, labels, init_g, alpha, pc_stable):
     return G
 
 
+def check_cause_metrics(ng: nx.Graph, chaos_type: str, chaos_comp: str) -> Tuple[bool, List[Any]]:
+    prefix = CHAOS_TO_CAUSE_METRIC_PREFIX[chaos_type]
+    cause_metrics = []
+    for node in ng.nodes():
+        if re.match(f"^c-{chaos_comp}_{prefix}.+", node):
+            cause_metrics.append(node)
+    if len(cause_metrics) > 0:
+        return True, cause_metrics
+    return False, cause_metrics
+
+
 def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
     reduced_df, metrics_dimension, clustering_info, mappings, metrics_meta = \
         read_data_file(tsdr_file)
@@ -286,6 +305,15 @@ def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
     print("--> Building causal graph", file=sys.stderr)
     g = build_causal_graph(
         reduced_df.values, labels, init_g, citest_alpha, pc_stable)
+    
+    print("--> Checking causal graph including chaos-injected metrics", file=sys.stderr)
+    chaos_type = metrics_meta['injected_chaos_type']
+    chaos_comp = metrics_meta['chaos_injected_component']
+    is_cause_metrics, cause_metric_nodes = check_cause_metrics(g, chaos_type, chaos_comp)
+    if is_cause_metrics:
+        print(f"Found cause metric {cause_metric_nodes} in '{chaos_comp}' '{chaos_type}'", file=sys.stderr)
+    else:
+        print(f"Not found cause metric in '{chaos_comp}' '{chaos_type}'", file=sys.stderr)
 
     agraph = nx.nx_agraph.to_agraph(g)
     img = agraph.draw(prog='sfdp', format='png')
@@ -308,6 +336,7 @@ def diag(tsdr_file, citest_alpha, pc_stable, out_dir):
                 'citest_alpha': citest_alpha,
             },
             'causal_graph_stats': {
+                'cause_metric_nodes': cause_metric_nodes,
                 'nodes_num': g.number_of_nodes(),
                 'edges_num': g.number_of_edges(),
             },
