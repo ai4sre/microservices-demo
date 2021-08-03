@@ -15,8 +15,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pcalg
-import pgmpy
 from IPython.display import Image
+from pgmpy import estimators
 
 from citest.fisher_z import ci_test_fisher_z
 from citest.fisher_z_pgmpy import fisher_z
@@ -265,7 +265,7 @@ def build_causal_graph_with_pcalg(dm, labels, init_g, alpha, pc_stable):
 def build_causal_graphs_with_pgmpy(df: pd.DataFrame,
                                    alpha: float,
                                    pc_stable: bool) -> nx.Graph:
-    c = pgmpy.PC(data=df)
+    c = estimators.PC(data=df)
     pc_method = 'stable' if pc_stable else None
     g = c.estimate(
         variant=pc_method,
