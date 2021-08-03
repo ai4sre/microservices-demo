@@ -271,6 +271,7 @@ def build_causal_graphs_with_pgmpy(df: pd.DataFrame,
         variant=pc_method,
         ci_test=fisher_z,
         significance_level=alpha,
+        return_type='pdag',
     )
     return find_dags(g)
 
