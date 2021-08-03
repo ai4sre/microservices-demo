@@ -149,8 +149,7 @@ def build_no_paths(labels, mappings):
         for container in containers:
             if container == "nsenter":
                 continue
-            nodes_containers[container] = node.replace(
-                "gke-microservices-experi-default-pool-", "")
+            nodes_containers[container] = node
 
     # C-C
     no_paths = []
