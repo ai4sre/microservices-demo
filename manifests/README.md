@@ -66,3 +66,19 @@ $ helm plugin install https://github.com/databus23/helm-diff
 $ helmfile apply
 $ kubectl apply -k .
 ```
+
+## Browse Grafana Dashboards
+
+1. Forward local port to grafana service port.
+
+```shell-session
+$ kubectl port-forward svc/grafana -n monitoring --address 0.0.0.0 3000:80
+```
+
+2. Add the following entry to `/etc/hosts` file.
+
+```
+127.0.0.1 grafana.monitoring.svc.cluster.local
+```
+
+3. Open <http://grafana.monitoring.svc.cluster.local:3000>.
